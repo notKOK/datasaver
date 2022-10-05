@@ -7,33 +7,28 @@
 using namespace std;
 using namespace pqxx;
 
-class flights {
+void readDataFromFile(FILE *file) {
     int64_t APMtime;
-    int64_t GPStime;
     unsigned int flight_number;
-public:
-    void readData(FILE *file);
-    static void insertData();
-};
-
-void flights::readData(FILE *file) {
     fseek(file, 33, SEEK_SET);
-    fread(&this->APMtime, 8, 1, file);
-    fread(&this->GPStime, 8, 1, file);
-    fseek(file, 4, SEEK_CUR);
-    fread(&this->flight_number, 4, 1, file);
-    this->APMtime /= 1000; //convert to seconds
-    this->GPStime /= 1000;
-    //convert time to another form
-   /* struct tm tm = *localtime(&this->APMtime);
-    printf("now: %d-%d-%d %d:%d:%d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-           tm.tm_hour, tm.tm_min, tm.tm_sec);
-    tm = *localtime(&this->GPStime);
-    printf("now: %d-%d-%d %d:%d:%d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-           tm.tm_hour, tm.tm_min, tm.tm_sec);*/
+    fread(&APMtime, 8, 1, file);
+    fseek(file, 12, SEEK_CUR);
+    fread(&flight_number, 4, 1, file);
+    APMtime /= 1000; //convert to seconds
+
+    //flights
+    struct tm tm = *localtime(&APMtime);
+    char result [100];
+    snprintf(result, 100,\
+        "INSERT INTO flights (NumFly, DateTime) VALUES (%d, '%d-%d-%d')", \
+        flight_number, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday); //Create SQL statement
+
+    //
+
+
 }
 
-void flights::insertData() {
+void insertDataToDB() {
     char const *sql;
 
     try {
@@ -45,9 +40,7 @@ void flights::insertData() {
             return;
         }
 
-        /* Create SQL statement */
-        sql = "INSERT INTO flights (NumFly) " \
-              "VALUES (19)";
+        sql;
 
         /* Create a transactional object. */
         work W(C);
@@ -66,15 +59,17 @@ void flights::insertData() {
 void fileCheck(FILE *file);
 
 int main() {
+    //open file and read signature
     FILE *pFile;
-
     pFile = fopen("under_test.K", "r");
     fileCheck(pFile);
     if(pFile == nullptr) perror ("Error opening file");
 
-    flights test{};
-    test.readData(pFile);
-    test.insertData();
+    //read main data from file
+    readDataFromFile(pFile);
+    insertDataToDB();
+
+    //end
     fclose(pFile);
     cout << "OK " << endl;
     return 0;
@@ -95,4 +90,3 @@ void fileCheck(FILE *file){
         }
     }
 }
-
