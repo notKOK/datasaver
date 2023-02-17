@@ -7,7 +7,28 @@
 using namespace std;
 using namespace pqxx;
 
-void readDataFromFile(FILE *file) {
+struct heading {
+    unsigned int sig1, sig2, sig3, sig4; //сигнатуры
+    unsigned char code; // код заголовка
+    unsigned char ver_head; // версия заголовка
+    unsigned char reserve[14]; // 32 bytes
+};
+
+struct subheading {
+    unsigned char ver_heading; // Версия заголовка
+    int64_t APM_time;  //Время АРМ
+    int64_t GPS_time;   //Время GPS
+    unsigned int mission_number; //номер миссии
+    unsigned int flight_number; // Номер полета
+    unsigned int period_number; // номер периода
+    unsigned int file_number; // номер файла
+    char country_flight[16]; // страна полета
+    char flight_territory[16]; // Территория полета
+    unsigned char reserve[63]; // 128 bytes
+};
+
+
+void readDataFromFile(FILE *file, char *result) {
     int64_t APMtime;
     unsigned int flight_number;
     fseek(file, 33, SEEK_SET);
@@ -18,18 +39,13 @@ void readDataFromFile(FILE *file) {
 
     //flights
     struct tm tm = *localtime(&APMtime);
-    char result [100];
     snprintf(result, 100,\
         "INSERT INTO flights (NumFly, DateTime) VALUES (%d, '%d-%d-%d')", \
         flight_number, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday); //Create SQL statement
-
-    //
-
-
 }
 
-void insertDataToDB() {
-    char const *sql;
+void insertDataToDB(const char *statem) {
+    char const *sql = statem;
 
     try {
         connection C("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
@@ -39,8 +55,6 @@ void insertDataToDB() {
             cout << "Can't open database" << endl;
             return;
         }
-
-        sql;
 
         /* Create a transactional object. */
         work W(C);
@@ -66,12 +80,18 @@ int main() {
     if(pFile == nullptr) perror ("Error opening file");
 
     //read main data from file
-    readDataFromFile(pFile);
-    insertDataToDB();
+    char *sqlStatement = new char[100];
+    readDataFromFile(pFile, sqlStatement);
+    insertDataToDB(sqlStatement);
 
     //end
     fclose(pFile);
     cout << "OK " << endl;
+
+    pFile = fopen("under_test.K", "r");
+    heading test{};
+    fread(&test, 32, 1, pFile);
+    if (test.sig1 == 0x00FF00FF) cout << sizeof(int64_t) << endl;
     return 0;
 }
 
