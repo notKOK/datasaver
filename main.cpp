@@ -3,32 +3,18 @@
 #include <vector>
 #include <algorithm>
 #include <pqxx/pqxx>
+#include "main.h"
 
 using namespace std;
 using namespace pqxx;
 
-struct heading {
-    unsigned int sig1, sig2, sig3, sig4; //сигнатуры
-    unsigned char code; // код заголовка
-    unsigned char ver_head; // версия заголовка
-    unsigned char reserve[14]; // 32 bytes
-};
-
-struct subheading {
-    unsigned char ver_heading; // Версия заголовка
-    int64_t APM_time;  //Время АРМ
-    int64_t GPS_time;   //Время GPS
-    unsigned int mission_number; //номер миссии
-    unsigned int flight_number; // Номер полета
-    unsigned int period_number; // номер периода
-    unsigned int file_number; // номер файла
-    char country_flight[16]; // страна полета
-    char flight_territory[16]; // Территория полета
-    unsigned char reserve[63]; // 128 bytes
-};
-
-
 void readDataFromFile(FILE *file, char *result) {
+    heading header{};
+    fread(&header, 32, 1, file);
+
+    subheading subheader{};
+    fread(&subheader, 128, 1, file);
+
     int64_t APMtime;
     unsigned int flight_number;
     fseek(file, 33, SEEK_SET);
