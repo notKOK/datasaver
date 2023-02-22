@@ -60,7 +60,11 @@ struct ACP { //Структура подзаголовка параметров 
 };
 
 struct format_string { //Структура подзаголовка формата строки
-    unsigned char reserve[64];
+    unsigned char dataType;
+    unsigned char counterType;
+    unsigned char orderData;
+    unsigned int countersInString;
+    unsigned char reserve[57]; //reserve 64
 };
 // структуры строки
 struct navigation { //Структура подзаголовка параметров навигации

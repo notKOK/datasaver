@@ -8,6 +8,27 @@
 using namespace std;
 using namespace pqxx;
 
+
+
+void readStringFromFile(FILE *file){
+    navigation navgt{};
+    fread(&navgt, 768, 1, file);
+    control_receiver receiver{};
+    fread(&receiver, 32, 1, file);
+    control_transmitter transmitter{};
+    fread(&transmitter, 32, 1, file);
+    control_synchronizer synchronizer{};
+    fread(&synchronizer, 32, 1, file);
+    control_generator generator{};
+    fread(&generator, 32, 1, file);
+    control_JSO jso{};
+    fread(&jso, 32, 1, file);
+    control_antenna_system antennaSystem{};
+    fread(&antennaSystem, 32, 1, file);
+    control_ACP acp{};
+    fread(&acp, 32, 1, file);
+}
+
 void readDataFromFile(FILE *file, char *result) {
     fseek(file, 32, SEEK_SET); // skip signatures
     subheading subheader{};
@@ -30,6 +51,25 @@ void readDataFromFile(FILE *file, char *result) {
     fread(&acp, 128, 1, file);
     format_string formatString{};
     fread(&formatString, 64, 1, file);
+    int data;
+    switch(int(formatString.counterType)) {
+        case 0:
+            data = sizeof(char);
+        case 1:
+            data = sizeof(short);
+        case 2:
+            data = sizeof(unsigned char);
+        case 3:
+            data = sizeof(unsigned short);
+        case 4:
+            data = sizeof(float);
+        case 5:
+            data = sizeof(double);
+    }
+
+    long int dataStrings = data * formatString.countersInString;
+    long int stringsInFile;
+
 
     subheader.APM_time /= 1000; //convert to seconds
 
@@ -65,8 +105,21 @@ void insertDataToDB(const char *statem) {
     }
 }
 
-
-void fileCheck(FILE *file);
+void fileCheck(FILE *file){
+    if(file == nullptr) perror ("file == nullptr");
+    vector<unsigned int>checkvec { 0x00FF00FF, 0x01FC01FE, 0x01F001F8, 0x56AA55AA };
+    size_t checkvecsize = checkvec.size();
+    unsigned int buffer;
+    for(size_t i = 0; i < checkvecsize; ++i) {
+        fread(&buffer, 4, 1, file);
+        if(std::count(checkvec.begin(), checkvec.end(), buffer)) {
+            continue;
+        } else {
+            perror("isn't a РЛС, РЛИ или строковой файл");
+            break;
+        }
+    }
+}
 
 int main() {
     //open file and read signature
@@ -88,20 +141,4 @@ int main() {
     fread(&test, 32, 1, pFile);
     if (test.sig1 == 0x00FF00FF) cout << sizeof(int64_t) << endl;
     return 0;
-}
-
-void fileCheck(FILE *file){
-    if(file == nullptr) perror ("file == nullptr");
-    vector<unsigned int>checkvec { 0x00FF00FF, 0x01FC01FE, 0x01F001F8, 0x56AA55AA };
-    size_t checkvecsize = checkvec.size();
-    unsigned int buffer;
-    for(size_t i = 0; i < checkvecsize; ++i) {
-        fread(&buffer, 4, 1, file);
-        if(std::count(checkvec.begin(), checkvec.end(), buffer)) {
-            continue;
-        } else {
-            perror("isn't a РЛС, РЛИ или строковой файл");
-            break;
-        }
-    }
 }
