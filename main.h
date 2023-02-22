@@ -27,5 +27,72 @@ struct subheading {
     unsigned char reserve[63]; // 128 bytes
 };
 
+struct locator_operation { //Структура подзаголовка режима работы локатора
+    unsigned char reserve[64];
+};
+
+struct receiver { //Структура подзаголовка параметров приемника
+    unsigned char reserve[64];
+};
+
+struct transmitter { //Структура подзаголовка параметров передатчика
+    unsigned char reserve[64];
+};
+
+struct synchronizer { //Структура подзаголовка параметров синхронизатора
+    unsigned char reserve[64];
+};
+
+struct generator { //Структура подзаголовка параметров генератора
+    unsigned char reserve[64];
+};
+
+struct JSO { //Структура подзаголовка параметров ЖСО
+    unsigned char reserve [64];
+};
+
+struct antenna_system { //Структура подзаголовка параметров антенной системы
+    unsigned char reserve[64];
+};
+
+struct ACP { //Структура подзаголовка параметров АЦП
+    unsigned char reserve[128];
+};
+
+struct format_string { //Структура подзаголовка формата строки
+    unsigned char reserve[64];
+};
+// структуры строки
+struct navigation { //Структура подзаголовка параметров навигации
+    unsigned char reserve[768];
+};
+
+struct control_receiver {  //Структура контрольных параметров приемника
+    unsigned char reserve[32];
+};
+
+struct control_transmitter { //Структура контрольных параметров передатчика
+    unsigned char reserve[32];
+};
+
+struct control_synchronizer { //Структура контрольных параметров синхронизатора
+    unsigned char reserve[32];
+};
+
+struct control_generator { //Структура контрольных параметров генератора
+    unsigned char reserve[32];
+};
+
+struct control_JSO { //Структура контрольных параметров СЖО
+    unsigned char reserve[32];
+};
+
+struct control_antenna_system { //Структура контрольных параметров антенной системы
+    unsigned char reserve[32];
+};
+
+struct control_ACP { //Структура контрольных параметров АЦП
+    unsigned char reserve[32];
+};
 #pragma pack(pop)
 #endif //DATASAVER_MAIN_H

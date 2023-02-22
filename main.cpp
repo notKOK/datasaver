@@ -9,25 +9,35 @@ using namespace std;
 using namespace pqxx;
 
 void readDataFromFile(FILE *file, char *result) {
-    heading header{};
-    fread(&header, 32, 1, file);
-
+    fseek(file, 32, SEEK_SET); // skip signatures
     subheading subheader{};
     fread(&subheader, 128, 1, file);
+    locator_operation locatorOperation{};
+    fread(&locatorOperation, 64, 1, file);
+    receiver recev{};
+    fread(&recev, 64, 1, file);
+    transmitter transmt{};
+    fread(&transmt, 64, 1, file);
+    synchronizer synch{};
+    fread(&synch, 64, 1, file);
+    generator gen{};
+    fread(&gen, 64, 1, file);
+    JSO jso{};
+    fread(&jso, 64, 1, file);
+    antenna_system antennaSystem{};
+    fread(&antennaSystem, 64, 1, file);
+    ACP acp{};
+    fread(&acp, 128, 1, file);
+    format_string formatString{};
+    fread(&formatString, 64, 1, file);
 
-    int64_t APMtime;
-    unsigned int flight_number;
-    fseek(file, 33, SEEK_SET);
-    fread(&APMtime, 8, 1, file);
-    fseek(file, 12, SEEK_CUR);
-    fread(&flight_number, 4, 1, file);
-    APMtime /= 1000; //convert to seconds
+    subheader.APM_time /= 1000; //convert to seconds
 
     //flights
-    struct tm tm = *localtime(&APMtime);
+    struct tm tm = *localtime(&(subheader.APM_time));
     snprintf(result, 100,\
         "INSERT INTO flights (NumFly, DateTime) VALUES (%d, '%d-%d-%d')", \
-        flight_number, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday); //Create SQL statement
+        0, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday); //Create SQL statement
 }
 
 void insertDataToDB(const char *statem) {
@@ -63,7 +73,6 @@ int main() {
     FILE *pFile;
     pFile = fopen("under_test.K", "r");
     fileCheck(pFile);
-    if(pFile == nullptr) perror ("Error opening file");
 
     //read main data from file
     char *sqlStatement = new char[100];
