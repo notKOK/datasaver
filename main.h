@@ -5,8 +5,6 @@
 #ifndef DATASAVER_MAIN_H
 #define DATASAVER_MAIN_H
 
-#pragma pack(push, 1)
-
 struct heading {
     unsigned int sig1, sig2, sig3, sig4; //сигнатуры
     unsigned char code; // код заголовка
@@ -28,7 +26,10 @@ struct subheading {
 };
 
 struct locator_operation { //Структура подзаголовка режима работы локатора
+    unsigned char version_header;
+    unsigned char range_number;
     unsigned char reserve[64];
+
 };
 
 struct receiver { //Структура подзаголовка параметров приемника
@@ -68,10 +69,20 @@ struct format_string { //Структура подзаголовка форма�
 };
 // структуры строки
 struct navigation { //Структура подзаголовка параметров навигации
-    unsigned char reserve[768];
+    unsigned char headerVersion;
+    int64_t APMtime;
+    int64_t GPStime;
+    unsigned int stringNumber;
+    bool DataSNP;
+    double height;
+    double angle;
+    double latitude;
+    unsigned char reserve[722]; //reserve 768
 };
 
 struct control_receiver {  //Структура контрольных параметров приемника
+    unsigned char version_header;
+    unsigned char IP;
     unsigned char reserve[32];
 };
 
@@ -98,5 +109,4 @@ struct control_antenna_system { //Структура контрольных па
 struct control_ACP { //Структура контрольных параметров АЦП
     unsigned char reserve[32];
 };
-#pragma pack(pop)
 #endif //DATASAVER_MAIN_H

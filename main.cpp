@@ -2,15 +2,58 @@
 #include <cstdio>
 #include <vector>
 #include <algorithm>
+#pragma pack(push, 1)
 #include <pqxx/pqxx>
 #include "main.h"
 
 using namespace std;
 using namespace pqxx;
+void insertDataToDB(const char *statem);
 
+unsigned int stringInBytes;
 
+void insert_into_flights(subheading &subheader){
+    char *sqlStatement = new char[100];
+    subheader.APM_time /= 1000; //convert to seconds
+
+    struct tm tm = *localtime(&(subheader.APM_time));
+    snprintf(sqlStatement, 100,\
+        "INSERT INTO flights (NumFly, DateTime) VALUES (%d, '%d-%d-%d')", \
+        0, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday); //Create SQL statement
+    insertDataToDB(sqlStatement);
+}
+
+void insert_into_context(){
+
+}
+
+void insert_into_sensor(locator_operation &locatorOperation){
+    char *sqlStatement = new char[100];
+    int type = int(locatorOperation.range_number);
+    snprintf(sqlStatement, 100,\
+        "INSERT INTO sensor (sensortype) VALUES ('РЛС-А%d00')", \
+        type); //Create SQL statement
+    insertDataToDB(sqlStatement);
+}
+
+void insert_into_view_area(){
+
+}
+
+void insert_into_series_of_holograms(){
+
+}
+
+void insert_into_hologram(){
+
+}
+
+void insert_into_rli(){
+
+}
 
 void readStringFromFile(FILE *file){
+    fseek(file, 32, SEEK_CUR); // skip signature string
     navigation navgt{};
     fread(&navgt, 768, 1, file);
     control_receiver receiver{};
@@ -27,9 +70,15 @@ void readStringFromFile(FILE *file){
     fread(&antennaSystem, 32, 1, file);
     control_ACP acp{};
     fread(&acp, 32, 1, file);
+
+    static int testDELETEME = 0;
+    testDELETEME++;
+    navgt.APMtime /= 1000;
+    struct tm tm = *localtime(&(navgt.APMtime));
+    //cout << testDELETEME <<  endl << tm.tm_year << '-' << tm.tm_mon << '-'<< tm.tm_mday << endl;
 }
 
-void readDataFromFile(FILE *file, char *result) {
+void readDataFromFile(FILE *file) {
     fseek(file, 32, SEEK_SET); // skip signatures
     subheading subheader{};
     fread(&subheader, 128, 1, file);
@@ -51,33 +100,33 @@ void readDataFromFile(FILE *file, char *result) {
     fread(&acp, 128, 1, file);
     format_string formatString{};
     fread(&formatString, 64, 1, file);
-    int data;
-    switch(int(formatString.counterType)) {
+
+    insert_into_sensor(locatorOperation);
+
+    insert_into_flights(subheader);
+
+    int dataSize = int(formatString.counterType);
+    switch(dataSize) {
         case 0:
-            data = sizeof(char);
+            dataSize = sizeof(char);
+            break;
         case 1:
-            data = sizeof(short);
+            dataSize = sizeof(short);
+            break;
         case 2:
-            data = sizeof(unsigned char);
+            dataSize = sizeof(unsigned char);
+            break;
         case 3:
-            data = sizeof(unsigned short);
+            dataSize = sizeof(unsigned short);
+            break;
         case 4:
-            data = sizeof(float);
+            dataSize = sizeof(float);
+            break;
         case 5:
-            data = sizeof(double);
+            dataSize = sizeof(double);
+            break;
     }
-
-    long int dataStrings = data * formatString.countersInString;
-    long int stringsInFile;
-
-
-    subheader.APM_time /= 1000; //convert to seconds
-
-    //flights
-    struct tm tm = *localtime(&(subheader.APM_time));
-    snprintf(result, 100,\
-        "INSERT INTO flights (NumFly, DateTime) VALUES (%d, '%d-%d-%d')", \
-        0, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday); //Create SQL statement
+    stringInBytes = dataSize * formatString.countersInString;
 }
 
 void insertDataToDB(const char *statem) {
@@ -128,17 +177,16 @@ int main() {
     fileCheck(pFile);
 
     //read main data from file
-    char *sqlStatement = new char[100];
-    readDataFromFile(pFile, sqlStatement);
-    insertDataToDB(sqlStatement);
+    readDataFromFile(pFile);
+
+    /*while ( ! feof (pFile) ) {
+        readStringFromFile(pFile);
+        fseek(pFile, stringInBytes, SEEK_CUR);
+    }*/
 
     //end
     fclose(pFile);
     cout << "OK " << endl;
-
-    pFile = fopen("under_test.K", "r");
-    heading test{};
-    fread(&test, 32, 1, pFile);
-    if (test.sig1 == 0x00FF00FF) cout << sizeof(int64_t) << endl;
     return 0;
 }
+#pragma pack(pop)
