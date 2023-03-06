@@ -20,6 +20,7 @@ void insert_into_flights(subheading &subheader){
     snprintf(sqlStatement, 100,\
         "INSERT INTO flights (NumFly, DateTime) VALUES (%d, '%d-%d-%d')", \
         0, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday); //Create SQL statement
+    printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
 }
 
@@ -28,11 +29,12 @@ void insert_into_context(){
 }
 
 void insert_into_sensor(locator_operation &locatorOperation){
-    char *sqlStatement = new char[100];
+    char *sqlStatement = new char[1000];
     int type = int(locatorOperation.range_number);
     snprintf(sqlStatement, 100,\
         "INSERT INTO sensor (sensortype) VALUES ('РЛС-А%d00')", \
         type); //Create SQL statement
+    printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
 }
 
@@ -105,7 +107,7 @@ void readDataFromFile(FILE *file) {
 
     insert_into_flights(subheader);
 
-    int dataSize = int(formatString.counterType);
+    /*int dataSize = int(formatString.counterType);
     switch(dataSize) {
         case 0:
             dataSize = sizeof(char);
@@ -126,12 +128,10 @@ void readDataFromFile(FILE *file) {
             dataSize = sizeof(double);
             break;
     }
-    stringInBytes = dataSize * formatString.countersInString;
+    stringInBytes = dataSize * formatString.countersInString;*/
 }
 
 void insertDataToDB(const char *statem) {
-    char const *sql = statem;
-
     try {
         connection C("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
         if (C.is_open()) {
@@ -145,7 +145,7 @@ void insertDataToDB(const char *statem) {
         work W(C);
 
         /* Execute SQL query */
-        W.exec( sql );
+        W.exec(statem);
         W.commit();
         cout << "Records created successfully" << endl;
     } catch (const std::exception &e) {
