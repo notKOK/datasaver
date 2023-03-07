@@ -25,7 +25,13 @@ void insert_into_flights(subheading &subheader){
 }
 
 void insert_into_context(){
-
+    char *sqlStatement = new char[1000];
+    snprintf(sqlStatement, 1000,\
+        "INSERT INTO context (ContextName, ContextBeginDate, ContextEndDate, coords, Commentary)"
+             "VALUES ('Sample context', '2022-01-01', '2022-12-31', 45.5231, 'This is a sample context for testing purposes.');");
+            //Create SQL statement
+    printf("%s \n", sqlStatement);
+    insertDataToDB(sqlStatement);
 }
 
 void insert_into_sensor(locator_operation &locatorOperation){
@@ -39,19 +45,42 @@ void insert_into_sensor(locator_operation &locatorOperation){
 }
 
 void insert_into_view_area(){
-
+    char *sqlStatement = new char[1000];
+    snprintf(sqlStatement, 1000,\
+        "INSERT INTO view_zone (ZoneGeometry, StartTime, EndTime, RangeToTheZone, Side, SourceDataZone) "
+             "VALUES (12.5, '2023-03-06 10:00:00', '2023-03-06 12:00:00', 12345, 1, 1);");
+        //Create SQL statement
+    printf("%s \n", sqlStatement);
+    insertDataToDB(sqlStatement);
 }
 
 void insert_into_series_of_holograms(){
-
+    char *sqlStatement = new char[1000];
+    snprintf(sqlStatement, 1000,\
+        "INSERT INTO series_of_holograms (NumLocator, Type_Rgg, Type_Work, NumStrAzimuth, NumStrRange, Step_Azimuth, Step_Range, Series_Rgg, PolarBut, PolarReception, BandWidth, DiskLabel, Path_Rgg) "
+             "VALUES (1, 23, 1, 12345678, 123456, 1.2, 2.3, 1234, 'A', 'B', 456, 'Disk1', '/path/to/rgg');");
+    //Create SQL statement
+    printf("%s \n", sqlStatement);
+    insertDataToDB(sqlStatement);
 }
 
 void insert_into_hologram(){
-
+    char *sqlStatement = new char[1000];
+    snprintf(sqlStatement, 1000,\
+        "INSERT INTO hologram (FileName, Num_file) VALUES ('hologram1', 12345);");
+    //Create SQL statement
+    printf("%s \n", sqlStatement);
+    insertDataToDB(sqlStatement);
 }
 
 void insert_into_rli(){
-
+    char *sqlStatement = new char[1000];
+    snprintf(sqlStatement, 1000,\
+        "INSERT INTO rli (NumLocator, Step_Azimuth, Step_Range, PolarBut, PolarReception, BandWidth, Form_RLI, FileName, Rli_Type, AzimuthSize, RangeSize, Commentary)"
+             " VALUES (1, 1.2, 2.3, 'A', 'B', 456, 1, 'rli1', 1, 1234567, 1234567, 'comment');");
+    //Create SQL statement
+    printf("%s \n", sqlStatement);
+    insertDataToDB(sqlStatement);
 }
 
 void readStringFromFile(FILE *file){
@@ -103,10 +132,19 @@ void readDataFromFile(FILE *file) {
     format_string formatString{};
     fread(&formatString, 64, 1, file);
 
-    insert_into_sensor(locatorOperation);
-
     insert_into_flights(subheader);
 
+    insert_into_sensor(locatorOperation);
+
+    insert_into_context();
+
+    insert_into_view_area();
+
+    insert_into_series_of_holograms();
+
+    insert_into_hologram();
+
+    insert_into_rli();
     /*int dataSize = int(formatString.counterType);
     switch(dataSize) {
         case 0:
