@@ -29,7 +29,6 @@ struct locator_operation { //Структура подзаголовка реж�
     unsigned char version_header;
     unsigned char range_number;
     unsigned char reserve[64];
-
 };
 
 struct receiver { //Структура подзаголовка параметров приемника
@@ -41,7 +40,12 @@ struct transmitter { //Структура подзаголовка параме�
 };
 
 struct synchronizer { //Структура подзаголовка параметров синхронизатора
-    unsigned char reserve[64];
+    unsigned char header_version;
+    unsigned char overview_mode;
+    unsigned char side;
+    unsigned char polarization;
+    float initial_range;
+    unsigned char reserve[56]; //reserve 64
 };
 
 struct generator { //Структура подзаголовка параметров генератора

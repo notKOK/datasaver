@@ -12,7 +12,7 @@ void insertDataToDB(const char *statem);
 
 unsigned int stringInBytes;
 
-void insert_into_flights(subheading &subheader){
+void insert_into_flights(subheading subheader){
     char *sqlStatement = new char[100];
     subheader.APM_time /= 1000; //convert to seconds
 
@@ -24,17 +24,20 @@ void insert_into_flights(subheading &subheader){
     insertDataToDB(sqlStatement);
 }
 
-void insert_into_context(){
+void insert_into_context(subheading subheader){
     char *sqlStatement = new char[1000];
+    subheader.APM_time /= 1000; //convert to seconds
+
+    struct tm tm = *localtime(&(subheader.APM_time));
     snprintf(sqlStatement, 1000,\
-        "INSERT INTO context (ContextName, ContextBeginDate, ContextEndDate, coords, Commentary)"
-             "VALUES ('Sample context', '2022-01-01', '2022-12-31', 45.5231, 'This is a sample context for testing purposes.');");
+        "INSERT INTO context (ContextName, ContextBeginDate, ContextEndDate, Latitude, Longitude, Latitude1, Longitude1, Commentary)"
+    "VALUES ('%d-%d-%d', '2022-01-01', '2022-12-31', 40.7128, -74.0060, 40.7128, -74.0060, 'This is a new context');", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
             //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
 }
 
-void insert_into_sensor(locator_operation &locatorOperation){
+void insert_into_sensor(locator_operation locatorOperation){
     char *sqlStatement = new char[1000];
     int type = int(locatorOperation.range_number);
     snprintf(sqlStatement, 100,\
@@ -44,21 +47,25 @@ void insert_into_sensor(locator_operation &locatorOperation){
     insertDataToDB(sqlStatement);
 }
 
-void insert_into_view_area(){
+void insert_into_view_area(synchronizer synch){
     char *sqlStatement = new char[1000];
+    int SourceDataZone = 0; //always 0
     snprintf(sqlStatement, 1000,\
-        "INSERT INTO view_zone (ZoneGeometry, StartTime, EndTime, RangeToTheZone, Side, SourceDataZone) "
-             "VALUES (12.5, '2023-03-06 10:00:00', '2023-03-06 12:00:00', 12345, 1, 1);");
+        "INSERT INTO view_zone (Latitude, Longitude, Latitude1, Longitude1, StartTime, EndTime, RangeToTheZone, Side, SourceDataZone)"
+    "VALUES (40.7128, -74.0060, 40.7128, -74.0060, '2022-01-01 00:00:00', '2022-01-01 01:00:00', %f, %d, %d);",synch.initial_range, synch.side, SourceDataZone);
         //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
 }
 
-void insert_into_series_of_holograms(){
+void insert_into_series_of_holograms(locator_operation locatorOperation){
     char *sqlStatement = new char[1000];
+    int Type_Rgg = 2; //always 2
+    int type = int(locatorOperation.range_number);
+
     snprintf(sqlStatement, 1000,\
         "INSERT INTO series_of_holograms (NumLocator, Type_Rgg, Type_Work, NumStrAzimuth, NumStrRange, Step_Azimuth, Step_Range, Series_Rgg, PolarBut, PolarReception, BandWidth, DiskLabel, Path_Rgg) "
-             "VALUES (1, 23, 1, 12345678, 123456, 1.2, 2.3, 1234, 'A', 'B', 456, 'Disk1', '/path/to/rgg');");
+             "VALUES (%d, %d, 1, 12345678, 123456, 1.2, 2.3, 1234, 'A', 'B', 456, 'Disk1', '/path/to/rgg');",type, Type_Rgg);
     //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
@@ -77,7 +84,7 @@ void insert_into_rli(){
     char *sqlStatement = new char[1000];
     snprintf(sqlStatement, 1000,\
         "INSERT INTO rli (NumLocator, Step_Azimuth, Step_Range, PolarBut, PolarReception, BandWidth, Form_RLI, FileName, Rli_Type, AzimuthSize, RangeSize, Commentary)"
-             " VALUES (1, 1.2, 2.3, 'A', 'B', 456, 1, 'rli1', 1, 1234567, 1234567, 'comment');");
+             "VALUES (1, 1.2, 2.3, 'A', 'B', 456, 1, 'rli1', 1, 1234567, 1234567, 'comment');");
     //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
@@ -106,7 +113,7 @@ void readStringFromFile(FILE *file){
     testDELETEME++;
     navgt.APMtime /= 1000;
     struct tm tm = *localtime(&(navgt.APMtime));
-    //cout << testDELETEME <<  endl << tm.tm_year << '-' << tm.tm_mon << '-'<< tm.tm_mday << endl;
+    cout << testDELETEME <<  endl << tm.tm_year << '-' << tm.tm_mon << '-'<< tm.tm_mday << endl;
 }
 
 void readDataFromFile(FILE *file) {
@@ -136,16 +143,16 @@ void readDataFromFile(FILE *file) {
 
     insert_into_sensor(locatorOperation);
 
-    insert_into_context();
+    insert_into_context(subheader);
 
-    insert_into_view_area();
+    insert_into_view_area(synch);
 
-    insert_into_series_of_holograms();
+    insert_into_series_of_holograms(locatorOperation);
 
     insert_into_hologram();
 
     insert_into_rli();
-    /*int dataSize = int(formatString.counterType);
+    int dataSize = int(formatString.counterType);
     switch(dataSize) {
         case 0:
             dataSize = sizeof(char);
@@ -166,7 +173,7 @@ void readDataFromFile(FILE *file) {
             dataSize = sizeof(double);
             break;
     }
-    stringInBytes = dataSize * formatString.countersInString;*/
+    stringInBytes = dataSize * formatString.countersInString;
 }
 
 void insertDataToDB(const char *statem) {
@@ -217,14 +224,21 @@ int main() {
     //read main data from file
     readDataFromFile(pFile);
 
-    /*while ( ! feof (pFile) ) {
+/*    while ( ! feof (pFile) ) {
         readStringFromFile(pFile);
         fseek(pFile, stringInBytes, SEEK_CUR);
     }*/
-
+    fseek(pFile, 8192, SEEK_SET);
+    for(int i =0; i < 3; i++){
+        readStringFromFile(pFile);
+        fseek(pFile, stringInBytes, SEEK_CUR);
+    }
     //end
     fclose(pFile);
     cout << "OK " << endl;
     return 0;
 }
 #pragma pack(pop)
+
+//4096
+//16384
