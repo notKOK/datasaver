@@ -28,11 +28,13 @@ struct subheading {
 struct locator_operation { //Структура подзаголовка режима работы локатора
     unsigned char version_header;
     unsigned char range_number;
-    unsigned char reserve[64];
+    unsigned char reserve[62]; //reserve 64
 };
 
 struct receiver { //Структура подзаголовка параметров приемника
-    unsigned char reserve[64];
+    unsigned char header_version;
+    unsigned char polarization;
+    unsigned char reserve[62]; //reserve 64
 };
 
 struct transmitter { //Структура подзаголовка параметров передатчика
@@ -45,7 +47,9 @@ struct synchronizer { //Структура подзаголовка параме
     unsigned char side;
     unsigned char polarization;
     float initial_range;
-    unsigned char reserve[56]; //reserve 64
+    unsigned char reserve1[5];
+    float Step_Azimuth;
+    unsigned char reserve[47]; //reserve 64
 };
 
 struct generator { //Структура подзаголовка параметров генератора
@@ -87,7 +91,7 @@ struct navigation { //Структура подзаголовка парамет
 struct control_receiver {  //Структура контрольных параметров приемника
     unsigned char version_header;
     unsigned char IP;
-    unsigned char reserve[32];
+    unsigned char reserve[30]; //reserve 32
 };
 
 struct control_transmitter { //Структура контрольных параметров передатчика
@@ -112,5 +116,12 @@ struct control_antenna_system { //Структура контрольных па
 
 struct control_ACP { //Структура контрольных параметров АЦП
     unsigned char reserve[32];
+};
+
+struct synthesis {
+    unsigned char reserve1 [18];
+    float Step_Range;
+    float Step_Azimuth;
+    unsigned char reserve [486];
 };
 #endif //DATASAVER_MAIN_H

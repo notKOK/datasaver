@@ -3,9 +3,13 @@
 #include <vector>
 #include <algorithm>
 #pragma pack(push, 1)
+#include <filesystem>
+#include <string>
 #include <pqxx/pqxx>
+#include <regex>
 #include "main.h"
 
+#define FILENAME "under_test.K"
 using namespace std;
 using namespace pqxx;
 void insertDataToDB(const char *statem);
@@ -31,7 +35,7 @@ void insert_into_context(subheading subheader){
     struct tm tm = *localtime(&(subheader.APM_time));
     snprintf(sqlStatement, 1000,\
         "INSERT INTO context (ContextName, ContextBeginDate, ContextEndDate, Latitude, Longitude, Latitude1, Longitude1, Commentary)"
-    "VALUES ('%d-%d-%d', '2022-01-01', '2022-12-31', 40.7128, -74.0060, 40.7128, -74.0060, 'This is a new context');", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+    "VALUES ('%d-%d-%d', '2022-01-01', '2022-12-31', 40.7128, -74.0060, 40.7128, -74.0060, NULL);", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
             //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
@@ -58,14 +62,19 @@ void insert_into_view_area(synchronizer synch){
     insertDataToDB(sqlStatement);
 }
 
-void insert_into_series_of_holograms(locator_operation locatorOperation){
+void insert_into_series_of_holograms(locator_operation locatorOperation, synchronizer synch, receiver recev){
     char *sqlStatement = new char[1000];
     int Type_Rgg = 2; //always 2
     int type = int(locatorOperation.range_number);
+    filesystem::path filepath(FILENAME);
+    string filePath = filesystem::absolute(filepath);
+    synch.polarization = (synch.polarization == '0')? 'V' : (synch.polarization == '1')? 'H' :
+            (synch.polarization == '2')? '2' : '4';
+    recev.polarization = (recev.polarization == '0')? 'V' : 'H';
 
     snprintf(sqlStatement, 1000,\
         "INSERT INTO series_of_holograms (NumLocator, Type_Rgg, Type_Work, NumStrAzimuth, NumStrRange, Step_Azimuth, Step_Range, Series_Rgg, PolarBut, PolarReception, BandWidth, DiskLabel, Path_Rgg) "
-             "VALUES (%d, %d, 1, 12345678, 123456, 1.2, 2.3, 1234, 'A', 'B', 456, 'Disk1', '/path/to/rgg');",type, Type_Rgg);
+             "VALUES (%d, %d, %d, 12345678, 123456, %f, 2.3, NULL, '%c', '%c', 456, NULL, '%s');",type, Type_Rgg, synch.overview_mode, synch.Step_Azimuth, synch.polarization, recev.polarization, filePath.c_str());
     //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
@@ -74,17 +83,23 @@ void insert_into_series_of_holograms(locator_operation locatorOperation){
 void insert_into_hologram(){
     char *sqlStatement = new char[1000];
     snprintf(sqlStatement, 1000,\
-        "INSERT INTO hologram (FileName, Num_file) VALUES ('hologram1', 12345);");
+        "INSERT INTO hologram (FileName, Num_file) VALUES ('%s', 12345);", FILENAME);
     //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
 }
 
-void insert_into_rli(){
+void insert_into_rli(locator_operation locatorOperation, synchronizer synch, receiver recev, synthesis synth){
     char *sqlStatement = new char[1000];
+    filesystem::path filepath(FILENAME);
+    string filePath = filesystem::absolute(filepath);
+    synch.polarization = (synch.polarization == '0')? 'V' : (synch.polarization == '1')? 'H' :
+                                                            (synch.polarization == '2')? '2' : '4';
+    recev.polarization = (recev.polarization == '0')? 'V' : 'H';
+
     snprintf(sqlStatement, 1000,\
         "INSERT INTO rli (NumLocator, Step_Azimuth, Step_Range, PolarBut, PolarReception, BandWidth, Form_RLI, FileName, Rli_Type, AzimuthSize, RangeSize, Commentary)"
-             "VALUES (1, 1.2, 2.3, 'A', 'B', 456, 1, 'rli1', 1, 1234567, 1234567, 'comment');");
+             "VALUES (%d, %f, 2.3, '%c', '%c', 456, 0, '%s', 1, 1234567, 1234567, NULL);",locatorOperation.range_number,synth.Step_Azimuth, synch.polarization, recev.polarization, filePath.c_str());
     //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
@@ -136,6 +151,18 @@ void readDataFromFile(FILE *file) {
     fread(&antennaSystem, 64, 1, file);
     ACP acp{};
     fread(&acp, 128, 1, file);
+
+    string filename = FILENAME;
+    if (regex_match(filename, regex("*.rl4"))) {
+        synthesis synth{};
+        fread(&synth, 512, 1, file);
+        format_string formatString{};
+        fread(&formatString, 64, 1, file);
+
+        insert_into_rli(locatorOperation, synch, recev, synth);
+        return;
+    }
+
     format_string formatString{};
     fread(&formatString, 64, 1, file);
 
@@ -147,11 +174,10 @@ void readDataFromFile(FILE *file) {
 
     insert_into_view_area(synch);
 
-    insert_into_series_of_holograms(locatorOperation);
+    insert_into_series_of_holograms(locatorOperation, synch, recev);
 
     insert_into_hologram();
 
-    insert_into_rli();
     int dataSize = int(formatString.counterType);
     switch(dataSize) {
         case 0:
@@ -192,7 +218,7 @@ void insertDataToDB(const char *statem) {
         /* Execute SQL query */
         W.exec(statem);
         W.commit();
-        cout << "Records created successfully" << endl;
+        cout << "Records created successfully" << endl << endl;
     } catch (const std::exception &e) {
         cerr << e.what() << std::endl;
         return;
@@ -218,7 +244,7 @@ void fileCheck(FILE *file){
 int main() {
     //open file and read signature
     FILE *pFile;
-    pFile = fopen("under_test.K", "r");
+    pFile = fopen(FILENAME, "r");
     fileCheck(pFile);
 
     //read main data from file
@@ -228,7 +254,7 @@ int main() {
         readStringFromFile(pFile);
         fseek(pFile, stringInBytes, SEEK_CUR);
     }*/
-    fseek(pFile, 8192, SEEK_SET);
+    //fseek(pFile, 8192, SEEK_SET);
     for(int i =0; i < 3; i++){
         readStringFromFile(pFile);
         fseek(pFile, stringInBytes, SEEK_CUR);
