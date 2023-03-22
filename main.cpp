@@ -7,9 +7,12 @@
 #include <string>
 #include <pqxx/pqxx>
 #include <regex>
-#include "main.h"
+#include "structs.h"
 
-#define FILENAME "under_test.K"
+
+#define FILENAME "OS3.k"
+
+
 using namespace std;
 using namespace pqxx;
 void insertDataToDB(const char *statem);
@@ -29,16 +32,19 @@ void insert_into_flights(subheading subheader){
 }
 
 void insert_into_context(subheading subheader){
-    char *sqlStatement = new char[1000];
+    char *sqlStatement = new char[1000 + 1];
     subheader.APM_time /= 1000; //convert to seconds
 
     struct tm tm = *localtime(&(subheader.APM_time));
     snprintf(sqlStatement, 1000,\
-        "INSERT INTO context (ContextName, ContextBeginDate, ContextEndDate, Latitude, Longitude, Latitude1, Longitude1, Commentary)"
-    "VALUES ('%d-%d-%d', '2022-01-01', '2022-12-31', 40.7128, -74.0060, 40.7128, -74.0060, NULL);", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+        "INSERT INTO context (ContextName, ContextBeginDate, ContextEndDate, Latitude,"
+             " Longitude, Latitude1, Longitude1, Commentary)"
+    "VALUES ('%d-%d-%d', '2022-01-01', '2022-12-31', 40.7128, -74.0060,"
+    " 40.7128, -74.0060, NULL);", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
             //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
+    delete[] sqlStatement;
 }
 
 void insert_into_sensor(locator_operation locatorOperation){
@@ -49,20 +55,27 @@ void insert_into_sensor(locator_operation locatorOperation){
         type); //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
+    delete[] sqlStatement;
 }
 
 void insert_into_view_area(synchronizer synch){
     char *sqlStatement = new char[1000];
     int SourceDataZone = 0; //always 0
     snprintf(sqlStatement, 1000,\
-        "INSERT INTO view_zone (Latitude, Longitude, Latitude1, Longitude1, StartTime, EndTime, RangeToTheZone, Side, SourceDataZone)"
-    "VALUES (40.7128, -74.0060, 40.7128, -74.0060, '2022-01-01 00:00:00', '2022-01-01 01:00:00', %f, %d, %d);",synch.initial_range, synch.side, SourceDataZone);
+        "INSERT INTO view_zone (Latitude, Longitude,"
+             " Latitude1, Longitude1, StartTime, EndTime,"
+             " RangeToTheZone, Side, SourceDataZone)"
+    "VALUES (40.7128, -74.0060, 40.7128, -74.0060,"
+    " '2022-01-01 00:00:00', '2022-01-01 01:00:00',"
+    " %f, %d, %d);",synch.initial_range, synch.side, SourceDataZone);
         //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
+    delete[] sqlStatement;
 }
 
-void insert_into_series_of_holograms(locator_operation locatorOperation, synchronizer synch, receiver recev){
+void insert_into_series_of_holograms(locator_operation locatorOperation,
+                                     synchronizer synch, receiver recev){
     char *sqlStatement = new char[1000];
     int Type_Rgg = 2; //always 2
     int type = int(locatorOperation.range_number);
@@ -73,23 +86,34 @@ void insert_into_series_of_holograms(locator_operation locatorOperation, synchro
     recev.polarization = (recev.polarization == '0')? 'V' : 'H';
 
     snprintf(sqlStatement, 1000,\
-        "INSERT INTO series_of_holograms (NumLocator, Type_Rgg, Type_Work, NumStrAzimuth, NumStrRange, Step_Azimuth, Step_Range, Series_Rgg, PolarBut, PolarReception, BandWidth, DiskLabel, Path_Rgg) "
-             "VALUES (%d, %d, %d, 12345678, 123456, %f, 2.3, NULL, '%c', '%c', 456, NULL, '%s');",type, Type_Rgg, synch.overview_mode, synch.Step_Azimuth, synch.polarization, recev.polarization, filePath.c_str());
+        "INSERT INTO series_of_holograms (NumLocator, Type_Rgg,"
+             " Type_Work, NumStrAzimuth, NumStrRange, Step_Azimuth,"
+             " Step_Range, Series_Rgg, PolarBut,"
+             " PolarReception, BandWidth, DiskLabel, Path_Rgg) "
+             "VALUES (%d, %d, %d, 12345678, 123456, %f, 2.3,"
+             " NULL, '%c', '%c', 456, NULL, '%s');",
+             type, Type_Rgg, synch.overview_mode,
+             synch.Step_Azimuth, synch.polarization,
+             recev.polarization, filePath.c_str());
     //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
+    delete[] sqlStatement;
 }
 
 void insert_into_hologram(){
     char *sqlStatement = new char[1000];
     snprintf(sqlStatement, 1000,\
-        "INSERT INTO hologram (FileName, Num_file) VALUES ('%s', 12345);", FILENAME);
+        "INSERT INTO hologram (FileName, Num_file)"
+             " VALUES ('%s', 12345);", FILENAME);
     //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
+    delete[] sqlStatement;
 }
 
-void insert_into_rli(locator_operation locatorOperation, synchronizer synch, receiver recev, synthesis synth){
+void insert_into_rli(locator_operation locatorOperation,
+                     synchronizer synch, receiver recev, synthesis synth){
     char *sqlStatement = new char[1000];
     filesystem::path filepath(FILENAME);
     string filePath = filesystem::absolute(filepath);
@@ -98,14 +122,21 @@ void insert_into_rli(locator_operation locatorOperation, synchronizer synch, rec
     recev.polarization = (recev.polarization == '0')? 'V' : 'H';
 
     snprintf(sqlStatement, 1000,\
-        "INSERT INTO rli (NumLocator, Step_Azimuth, Step_Range, PolarBut, PolarReception, BandWidth, Form_RLI, FileName, Rli_Type, AzimuthSize, RangeSize, Commentary)"
-             "VALUES (%d, %f, 2.3, '%c', '%c', 456, 0, '%s', 1, 1234567, 1234567, NULL);",locatorOperation.range_number,synth.Step_Azimuth, synch.polarization, recev.polarization, filePath.c_str());
+        "INSERT INTO rli (NumLocator, Step_Azimuth, Step_Range,"
+             " PolarBut, PolarReception, BandWidth, Form_RLI, FileName, Rli_Type,"
+             " AzimuthSize, RangeSize, Commentary)"
+             "VALUES (%d, %f, 2.3, '%c', '%c', 456, 0, '%s',"
+             " %d, 1234567, 1234567, NULL);",
+             locatorOperation.range_number,synth.Step_Azimuth,
+             synch.polarization, recev.polarization,
+             filePath.c_str(), synch.overview_mode);
     //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
+    delete[] sqlStatement;
 }
 
-void readStringFromFile(FILE *file){
+tuple<int64_t, int64_t> readStringFromFile(FILE *file){
     fseek(file, 32, SEEK_CUR); // skip signature string
     navigation navgt{};
     fread(&navgt, 768, 1, file);
@@ -124,11 +155,12 @@ void readStringFromFile(FILE *file){
     control_ACP acp{};
     fread(&acp, 32, 1, file);
 
-    static int testDELETEME = 0;
-    testDELETEME++;
-    navgt.APMtime /= 1000;
-    struct tm tm = *localtime(&(navgt.APMtime));
-    cout << testDELETEME <<  endl << tm.tm_year << '-' << tm.tm_mon << '-'<< tm.tm_mday << endl;
+    if(navgt.stringNumber == 0) {
+        int64_t ContextBeginDate = navgt.APMtime;
+    }
+    int64_t ContextEndDate, ContextBeginDate;
+    ContextEndDate = navgt.APMtime;
+    return make_tuple(ContextBeginDate, ContextEndDate);
 }
 
 void readDataFromFile(FILE *file) {
@@ -153,7 +185,7 @@ void readDataFromFile(FILE *file) {
     fread(&acp, 128, 1, file);
 
     string filename = FILENAME;
-    if (regex_match(filename, regex("*.rl4"))) {
+    if (regex_match(filename, regex(".*\\.rl4"))) {
         synthesis synth{};
         fread(&synth, 512, 1, file);
         format_string formatString{};
@@ -165,6 +197,11 @@ void readDataFromFile(FILE *file) {
 
     format_string formatString{};
     fread(&formatString, 64, 1, file);
+
+//    while ( ! feof (file) ) {
+//        auto [ContextBeginDate, ContextEndDate] = readStringFromFile(file);
+//        fseek(file, stringInBytes, SEEK_CUR);
+//    }
 
     insert_into_flights(subheader);
 
@@ -199,7 +236,8 @@ void readDataFromFile(FILE *file) {
             dataSize = sizeof(double);
             break;
     }
-    stringInBytes = dataSize * formatString.countersInString;
+  //  formatString.dataType =
+    stringInBytes = dataSize * formatString.countersInString * 2;
 }
 
 void insertDataToDB(const char *statem) {
@@ -250,15 +288,6 @@ int main() {
     //read main data from file
     readDataFromFile(pFile);
 
-/*    while ( ! feof (pFile) ) {
-        readStringFromFile(pFile);
-        fseek(pFile, stringInBytes, SEEK_CUR);
-    }*/
-    //fseek(pFile, 8192, SEEK_SET);
-    for(int i =0; i < 3; i++){
-        readStringFromFile(pFile);
-        fseek(pFile, stringInBytes, SEEK_CUR);
-    }
     //end
     fclose(pFile);
     cout << "OK " << endl;

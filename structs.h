@@ -2,8 +2,8 @@
 // Created by danila on 21.02.23.
 //
 
-#ifndef DATASAVER_MAIN_H
-#define DATASAVER_MAIN_H
+#ifndef DATASAVER_STRUCTS_H
+#define DATASAVER_STRUCTS_H
 
 struct heading {
     unsigned int sig1, sig2, sig3, sig4; //сигнатуры
@@ -124,4 +124,4 @@ struct synthesis {
     float Step_Azimuth;
     unsigned char reserve [486];
 };
-#endif //DATASAVER_MAIN_H
+#endif //DATASAVER_STRUCTS_H
