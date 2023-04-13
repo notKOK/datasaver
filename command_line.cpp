@@ -5,7 +5,7 @@ command_line::command_line(int argc, char* argv[])
 {
     desc_.add_options()
             ("help,h", "produce help message")
-            ("file,f", po::value<std::string>(), "set file name")
+            ("dataFile,f", po::value<std::string>(), "set dataFile name")
             ("dir,d", po::value<std::string>(), "set directory path");
 
     po::variables_map vm;
@@ -17,8 +17,8 @@ command_line::command_line(int argc, char* argv[])
         exit(0);
     }
 
-    if (vm.count("file")) {
-        filename_ = vm["file"].as<std::string>();
+    if (vm.count("dataFile")) {
+        filename_ = vm["dataFile"].as<std::string>();
     }
 
     if (vm.count("dir")) {
@@ -26,17 +26,16 @@ command_line::command_line(int argc, char* argv[])
     }
 }
 
-int command_line::run()
+std::string command_line::run()
 {
     if (!filename_.empty()) {
-        std::cout << "File name: " << filename_ << std::endl;
+        return filename_;
     }
 
     if (!directory_.empty()) {
         std::cout << "Directory path: " << directory_ << std::endl;
+        return directory_;
     }
 
-    // ваш код
-
-    return 0;
+    return filename_;
 }

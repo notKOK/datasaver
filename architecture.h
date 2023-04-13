@@ -1,5 +1,7 @@
 #include <string>
 #include <boost/program_options.hpp>
+#include <fstream>
+#include "structs.h"
 
 #ifndef DATASAVER_ARCHITECTURE_H
 #define DATASAVER_ARCHITECTURE_H
@@ -10,7 +12,7 @@ class command_line
 {
 public:
     command_line(int argc, char* argv[]);
-    int run();
+    std::string run();
 
 private:
     po::options_description desc_;
@@ -18,7 +20,28 @@ private:
     std::string directory_;
 };
 
-class file; //datagramm or data file;
+class dataFile {
+public:
+    explicit dataFile(const std::string& file_name);
+    ~dataFile();
+    void readDataFromFile();
+    subheading davot();
+
+private:
+    std::ifstream datFile;
+    stringStructs firstString;
+    stringStructs secondString;
+    subheading subheader{};
+    locator_operation locatorOperation{};
+    receiver recev{};
+    transmitter transmt{};
+    synchronizer synch{};
+    generator gen{};
+    JSO jso{};
+    antenna_system antennaSystem{};
+    ACP acp{};
+    format_string formatString{};
+}; //datagramm or data dataFile
 class database_connect;
 
 

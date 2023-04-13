@@ -2,16 +2,14 @@
 #include <cstdio>
 #include <vector>
 #include <algorithm>
-#pragma pack(push, 1)
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <pqxx/pqxx>
 #include <regex>
+#pragma pack(push, 1)
 #include "structs.h"
 #include "architecture.h"
-
-
-#define FILENAME "OS3.k"
 
 
 using namespace std;
@@ -31,7 +29,7 @@ void insert_into_flights(subheading subheader){
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
 }
-
+/*
 void insert_into_context(subheading subheader){
     char *sqlStatement = new char[1000 + 1];
     subheader.APM_time /= 1000; //convert to seconds
@@ -80,7 +78,7 @@ void insert_into_series_of_holograms(locator_operation locatorOperation,
     char *sqlStatement = new char[1000];
     int Type_Rgg = 2; //always 2
     int type = int(locatorOperation.range_number);
-    filesystem::path filepath(FILENAME);
+    filesystem::path filepath("os.k");
     string filePath = filesystem::absolute(filepath);
     synch.polarization = (synch.polarization == '0')? 'V' : (synch.polarization == '1')? 'H' :
             (synch.polarization == '2')? '2' : '4';
@@ -106,7 +104,7 @@ void insert_into_hologram(){
     char *sqlStatement = new char[1000];
     snprintf(sqlStatement, 1000,\
         "INSERT INTO hologram (FileName, Num_file)"
-             " VALUES ('%s', 12345);", FILENAME);
+             " VALUES ('%s', 12345);", "FILENAME");
     //Create SQL statement
     printf("%s \n", sqlStatement);
     insertDataToDB(sqlStatement);
@@ -116,7 +114,7 @@ void insert_into_hologram(){
 void insert_into_rli(locator_operation locatorOperation,
                      synchronizer synch, receiver recev, synthesis synth){
     char *sqlStatement = new char[1000];
-    filesystem::path filepath(FILENAME);
+    filesystem::path filepath("os.k");
     string filePath = filesystem::absolute(filepath);
     synch.polarization = (synch.polarization == '0')? 'V' : (synch.polarization == '1')? 'H' :
                                                             (synch.polarization == '2')? '2' : '4';
@@ -137,7 +135,7 @@ void insert_into_rli(locator_operation locatorOperation,
     delete[] sqlStatement;
 }
 
-tuple<int64_t, int64_t> readStringFromFile(FILE *file){
+void readStringFromFile(FILE *file){
     fseek(file, 32, SEEK_CUR); // skip signature string
     navigation navgt{};
     fread(&navgt, 768, 1, file);
@@ -161,31 +159,12 @@ tuple<int64_t, int64_t> readStringFromFile(FILE *file){
     }
     int64_t ContextEndDate, ContextBeginDate;
     ContextEndDate = navgt.APMtime;
-    return make_tuple(ContextBeginDate, ContextEndDate);
 }
-
+*/
+/*
 void readDataFromFile(FILE *file) {
-    fseek(file, 32, SEEK_SET); // skip signatures
-    subheading subheader{};
-    fread(&subheader, 128, 1, file);
-    locator_operation locatorOperation{};
-    fread(&locatorOperation, 64, 1, file);
-    receiver recev{};
-    fread(&recev, 64, 1, file);
-    transmitter transmt{};
-    fread(&transmt, 64, 1, file);
-    synchronizer synch{};
-    fread(&synch, 64, 1, file);
-    generator gen{};
-    fread(&gen, 64, 1, file);
-    JSO jso{};
-    fread(&jso, 64, 1, file);
-    antenna_system antennaSystem{};
-    fread(&antennaSystem, 64, 1, file);
-    ACP acp{};
-    fread(&acp, 128, 1, file);
 
-    string filename = FILENAME;
+    string filename = "os.k";
     if (regex_match(filename, regex(".*\\.rl4"))) {
         synthesis synth{};
         fread(&synth, 512, 1, file);
@@ -196,13 +175,6 @@ void readDataFromFile(FILE *file) {
         return;
     }
 
-    format_string formatString{};
-    fread(&formatString, 64, 1, file);
-
-//    while ( ! feof (file) ) {
-//        auto [ContextBeginDate, ContextEndDate] = readStringFromFile(file);
-//        fseek(file, stringInBytes, SEEK_CUR);
-//    }
 
     insert_into_flights(subheader);
 
@@ -214,7 +186,7 @@ void readDataFromFile(FILE *file) {
 
     insert_into_series_of_holograms(locatorOperation, synch, recev);
 
-    insert_into_hologram();
+    insert_into_hologram();*//*
 
     int dataSize = int(formatString.counterType);
     switch(dataSize) {
@@ -237,9 +209,10 @@ void readDataFromFile(FILE *file) {
             dataSize = sizeof(double);
             break;
     }
-  //  formatString.dataType =
+    formatString.dataType =
     stringInBytes = dataSize * formatString.countersInString * 2;
 }
+*/
 
 void insertDataToDB(const char *statem) {
     try {
@@ -264,34 +237,14 @@ void insertDataToDB(const char *statem) {
     }
 }
 
-void fileCheck(FILE *file){
-    if(file == nullptr) perror ("file == nullptr");
-    vector<unsigned int>checkvec { 0x00FF00FF, 0x01FC01FE, 0x01F001F8, 0x56AA55AA };
-    size_t checkvecsize = checkvec.size();
-    unsigned int buffer;
-    for(size_t i = 0; i < checkvecsize; ++i) {
-        fread(&buffer, 4, 1, file);
-        if(std::count(checkvec.begin(), checkvec.end(), buffer)) {
-            continue;
-        } else {
-            perror("isn't a РЛС, РЛИ или строковой файл");
-            break;
-        }
-    }
-}
+int main(int argc, char* argv[]) {
+    command_line cmd(argc, argv);
+    std::string file_name = cmd.run();
 
-int main() {
-    //open file and read signature
+    dataFile f(file_name);
+    f.readDataFromFile();
+    //insert_into_flights(f.davot());
 
-    FILE *pFile;
-    pFile = fopen(FILENAME, "r");
-    fileCheck(pFile);
-
-    //read main data from file
-    readDataFromFile(pFile);
-
-    //end
-    fclose(pFile);
     cout << "OK " << endl;
     return 0;
 }

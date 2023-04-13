@@ -75,53 +75,56 @@ struct format_string { //Структура подзаголовка форма�
     unsigned int countersInString;
     unsigned char reserve[57]; //reserve 64
 };
-// структуры строки
-struct navigation { //Структура подзаголовка параметров навигации
-    unsigned char headerVersion;
-    int64_t APMtime;
-    int64_t GPStime;
-    unsigned int stringNumber;
-    bool DataSNP;
-    double height;
-    double angle;
-    double latitude;
-    unsigned char reserve[722]; //reserve 768
-};
 
-struct control_receiver {  //Структура контрольных параметров приемника
-    unsigned char version_header;
-    unsigned char IP;
-    unsigned char reserve[30]; //reserve 32
-};
+class stringStructs {
+    // структуры строки
+    struct navigation { //Структура подзаголовка параметров навигации
+        unsigned char headerVersion;
+        int64_t APMtime;
+        int64_t GPStime;
+        unsigned int stringNumber;
+        bool DataSNP;
+        double height;
+        double angle;
+        double latitude;
+        unsigned char reserve[722]; //reserve 768
+    };
 
-struct control_transmitter { //Структура контрольных параметров передатчика
-    unsigned char reserve[32];
-};
+    struct control_receiver {  //Структура контрольных параметров приемника
+        unsigned char version_header;
+        unsigned char IP;
+        unsigned char reserve[30]; //reserve 32
+    };
 
-struct control_synchronizer { //Структура контрольных параметров синхронизатора
-    unsigned char reserve[32];
-};
+    struct control_transmitter { //Структура контрольных параметров передатчика
+        unsigned char reserve[32];
+    };
 
-struct control_generator { //Структура контрольных параметров генератора
-    unsigned char reserve[32];
-};
+    struct control_synchronizer { //Структура контрольных параметров синхронизатора
+        unsigned char reserve[32];
+    };
 
-struct control_JSO { //Структура контрольных параметров СЖО
-    unsigned char reserve[32];
-};
+    struct control_generator { //Структура контрольных параметров генератора
+        unsigned char reserve[32];
+    };
 
-struct control_antenna_system { //Структура контрольных параметров антенной системы
-    unsigned char reserve[32];
-};
+    struct control_JSO { //Структура контрольных параметров СЖО
+        unsigned char reserve[32];
+    };
 
-struct control_ACP { //Структура контрольных параметров АЦП
-    unsigned char reserve[32];
-};
+    struct control_antenna_system { //Структура контрольных параметров антенной системы
+        unsigned char reserve[32];
+    };
 
-struct synthesis {
-    unsigned char reserve1 [18];
-    float Step_Range;
-    float Step_Azimuth;
-    unsigned char reserve [486];
+    struct control_ACP { //Структура контрольных параметров АЦП
+        unsigned char reserve[32];
+    };
+
+    struct synthesis {
+        unsigned char reserve1 [18];
+        float Step_Range;
+        float Step_Azimuth;
+        unsigned char reserve [486];
+    };
 };
 #endif //DATASAVER_STRUCTS_H
