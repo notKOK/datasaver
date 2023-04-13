@@ -8,6 +8,7 @@
 #include <pqxx/pqxx>
 #include <regex>
 #include "structs.h"
+#include "architecture.h"
 
 
 #define FILENAME "OS3.k"
@@ -281,6 +282,7 @@ void fileCheck(FILE *file){
 
 int main() {
     //open file and read signature
+
     FILE *pFile;
     pFile = fopen(FILENAME, "r");
     fileCheck(pFile);
@@ -295,5 +297,11 @@ int main() {
 }
 #pragma pack(pop)
 
-//4096
-//16384
+// в мейне создавать экземпляры классов и вызов интерфейсных функций
+// чтение мейна - разбор командной строки
+//1824 хедер общий
+// 784-800 весь заголовок
+// 1024??
+// 1024 - 64 заголовок строки
+// заголовок ргг 800
+// короче разберемся
