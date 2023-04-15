@@ -12,6 +12,7 @@ int main(int argc, char* argv[]) {
     dataFile f(file_name);
     f.readHeaderFromFile();
     f.readStringsFromFile();
+    //f.testStructs();
 
     database base("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
     base.execute(f.createQuery());

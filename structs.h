@@ -83,8 +83,10 @@ public:
         bool DataSNP;
         double height;
         double angle;
-        double latitude;
-        unsigned char reserve[722]; //reserve 768
+        double latitude; // вот эту надо
+        double latitude_exact;
+        double longitude;
+        unsigned char reserve[706]; //reserve 768
     };
 
     struct control_receiver {  //Структура контрольных параметров приемника

@@ -4,11 +4,11 @@
 #include "structs.h"
 #include <pqxx/pqxx>
 
-
 #ifndef DATASAVER_ARCHITECTURE_H
 #define DATASAVER_ARCHITECTURE_H
 
 namespace po = boost::program_options;
+using namespace std;
 
 class command_line
 {
@@ -29,9 +29,11 @@ public:
     void readHeaderFromFile();
     void readStringsFromFile();
     std::vector<std::string> createQuery();
+    void testStructs();
 
 private:
     std::ifstream datFile;
+    std::string file_name;
 
     stringStructs firstString;
     stringStructs lastString;
