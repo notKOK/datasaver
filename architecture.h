@@ -38,6 +38,12 @@ private:
 
     void readOneString(stringStructs *oneString);
     std::string createQueryIntoFlights();
+    std::string createQueryIntoContext();
+    std::string createQueryIntoSensor();
+    std::string createQueryIntoViewArea();
+    std::string createQueryIntoSeriesOfHolograms();
+    std::string createQueryIntoHologram();
+    std::string createQueryIntoRli();
     subheading subheader{};
     locator_operation locatorOperation{};
     receiver recev{};

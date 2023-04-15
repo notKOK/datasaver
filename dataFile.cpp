@@ -91,6 +91,7 @@ void dataFile::readOneString(stringStructs *oneString) {
 std::vector<std::string> dataFile::createQuery(){
     std::vector<std::string> sqlStatements;
     sqlStatements.push_back(createQueryIntoFlights());
+    sqlStatements.push_back(createQueryIntoContext());
     return sqlStatements;
 }
 
@@ -106,4 +107,76 @@ std::string dataFile::createQueryIntoFlights() {
     return sqlStatement;
 }
 
+std::string dataFile::createQueryIntoContext(){
+    subheader.APM_time /= 1000; //convert to seconds
+    struct tm tm = *localtime(&(subheader.APM_time));
+    boost::format sqlStatement("INSERT INTO context (ContextName, ContextBeginDate, ContextEndDate, Latitude, Longitude, Latitude1, Longitude1, Commentary) VALUES ('%1%-%2%-%3%', '2022-01-01', '2022-12-31', 40.7128, -74.0060, 40.7128, -74.0060, NULL);");
+    sqlStatement % (tm.tm_year + 1900) % (tm.tm_mon + 1) % tm.tm_mday;
+    std::cout << sqlStatement.str() << std::endl;
+    return sqlStatement.str();
+}
 
+std::string dataFile::createQueryIntoSensor() {
+    boost::format sqlStatement("INSERT INTO sensor (sensortype) VALUES ('РЛС-А%d00');");
+    int type = static_cast<int>(locatorOperation.range_number);
+    sqlStatement % type;
+    std::cout << sqlStatement.str() << std::endl;
+    return sqlStatement.str();
+}
+
+std::string dataFile::createQueryIntoViewArea() {
+    boost::format sqlStatement("INSERT INTO view_zone (Latitude, Longitude, Latitude1, Longitude1, StartTime, EndTime, RangeToTheZone, Side, SourceDataZone) \
+    VALUES (%f, %f, %f, %f, '%s', '%s', %f, %d, %d);");
+    int SourceDataZone = 0;
+    sqlStatement % 40.7128 % -74.0060 % 40.7128 % -74.0060 % "2022-01-01 00:00:00" % "2022-01-01 01:00:00" % synch.initial_range % synch.side % SourceDataZone;
+    std::cout << sqlStatement.str() << std::endl;
+    return sqlStatement.str();
+}
+
+
+std::string dataFile::createQueryIntoSeriesOfHolograms() {
+    int Type_Rgg = 2; //always 2
+    int type = static_cast<int>(locatorOperation.range_number);
+    std::filesystem::path filepath("os.k");
+    std::string filePath = std::filesystem::absolute(filepath);
+    synch.polarization = (synch.polarization == '0') ? 'V' : (synch.polarization == '1') ? 'H' :
+                                                             (synch.polarization == '2') ? '2' : '4';
+    recev.polarization = (recev.polarization == '0') ? 'V' : 'H';
+
+    boost::format fmt("INSERT INTO series_of_holograms (NumLocator, Type_Rgg, Type_Work, NumStrAzimuth,"
+                      " NumStrRange, Step_Azimuth, Step_Range, Series_Rgg, PolarBut, PolarReception,"
+                      " BandWidth, DiskLabel, Path_Rgg) "
+                      "VALUES (%1%, %2%, %3%, 12345678, 123456, %4%, 2.3, NULL, '%5%', '%6%', 456,"
+                      " NULL, '%7%');");
+    fmt % type % Type_Rgg % synch.overview_mode % synch.Step_Azimuth % synch.polarization % recev.polarization
+    % filePath;
+
+    std::string sqlStatement = fmt.str();
+    std::cout << sqlStatement << std::endl;
+    return sqlStatement;
+}
+
+std::string dataFile::createQueryIntoHologram() {
+    std::string fileName = "FILENAME";
+    boost::format fmt("INSERT INTO hologram (FileName, Num_file) VALUES ('%s', 12345);");
+    fmt % fileName;
+    std::string sqlStatement = fmt.str();
+    return sqlStatement;
+}
+
+std::string dataFile::createQueryIntoRli() {
+    std::string filePath = std::filesystem::absolute(std::filesystem::path("os.k")).string();
+    synch.polarization = (synch.polarization == '0') ? 'V' : (synch.polarization == '1') ? 'H' :
+                                                             (synch.polarization == '2') ? '2' : '4';
+    recev.polarization = (recev.polarization == '0') ? 'V' : 'H';
+
+    boost::format fmt("INSERT INTO rli (NumLocator, Step_Azimuth, Step_Range,"
+                      " PolarBut, PolarReception, BandWidth, Form_RLI, FileName, Rli_Type,"
+                      " AzimuthSize, RangeSize, Commentary)"
+                      "VALUES (%1%, %2%, 2.3, '%3%', '%4%', 456, 0, '%5%', %6%, 1234567, 1234567, NULL);");
+    fmt % locatorOperation.range_number % synch.Step_Azimuth % synch.polarization
+    % recev.polarization % filePath % synch.overview_mode;
+
+    std::string sqlStatement = fmt.str();
+    return sqlStatement;
+}
