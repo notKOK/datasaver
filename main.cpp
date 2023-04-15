@@ -1,34 +1,13 @@
 #include <iostream>
-#include <cstdio>
-#include <vector>
-#include <algorithm>
-#include <filesystem>
-#include <fstream>
 #include <string>
 #include <pqxx/pqxx>
-#include <regex>
 #pragma pack(push, 1)
-#include "structs.h"
 #include "architecture.h"
 
 
 using namespace std;
 using namespace pqxx;
-void insertDataToDB(const char *statem);
 
-unsigned int stringInBytes;
-
-void insert_into_flights(subheading subheader){
-    char *sqlStatement = new char[100];
-    subheader.APM_time /= 1000; //convert to seconds
-
-    struct tm tm = *localtime(&(subheader.APM_time));
-    snprintf(sqlStatement, 100,\
-        "INSERT INTO flights (NumFly, DateTime) VALUES (%d, '%d-%d-%d')", \
-        0, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday); //Create SQL statement
-    printf("%s \n", sqlStatement);
-    insertDataToDB(sqlStatement);
-}
 /*
 void insert_into_context(subheading subheader){
     char *sqlStatement = new char[1000 + 1];
@@ -135,126 +114,19 @@ void insert_into_rli(locator_operation locatorOperation,
     delete[] sqlStatement;
 }
 
-void readStringFromFile(FILE *file){
-    fseek(file, 32, SEEK_CUR); // skip signature string
-    navigation navgt{};
-    fread(&navgt, 768, 1, file);
-    control_receiver receiver{};
-    fread(&receiver, 32, 1, file);
-    control_transmitter transmitter{};
-    fread(&transmitter, 32, 1, file);
-    control_synchronizer synchronizer{};
-    fread(&synchronizer, 32, 1, file);
-    control_generator generator{};
-    fread(&generator, 32, 1, file);
-    control_JSO jso{};
-    fread(&jso, 32, 1, file);
-    control_antenna_system antennaSystem{};
-    fread(&antennaSystem, 32, 1, file);
-    control_ACP acp{};
-    fread(&acp, 32, 1, file);
-
-    if(navgt.stringNumber == 0) {
-        int64_t ContextBeginDate = navgt.APMtime;
-    }
-    int64_t ContextEndDate, ContextBeginDate;
-    ContextEndDate = navgt.APMtime;
-}
 */
-/*
-void readDataFromFile(FILE *file) {
-
-    string filename = "os.k";
-    if (regex_match(filename, regex(".*\\.rl4"))) {
-        synthesis synth{};
-        fread(&synth, 512, 1, file);
-        format_string formatString{};
-        fread(&formatString, 64, 1, file);
-
-        insert_into_rli(locatorOperation, synch, recev, synth);
-        return;
-    }
-
-
-    insert_into_flights(subheader);
-
-    insert_into_sensor(locatorOperation);
-
-    insert_into_context(subheader);
-
-    insert_into_view_area(synch);
-
-    insert_into_series_of_holograms(locatorOperation, synch, recev);
-
-    insert_into_hologram();*//*
-
-    int dataSize = int(formatString.counterType);
-    switch(dataSize) {
-        case 0:
-            dataSize = sizeof(char);
-            break;
-        case 1:
-            dataSize = sizeof(short);
-            break;
-        case 2:
-            dataSize = sizeof(unsigned char);
-            break;
-        case 3:
-            dataSize = sizeof(unsigned short);
-            break;
-        case 4:
-            dataSize = sizeof(float);
-            break;
-        case 5:
-            dataSize = sizeof(double);
-            break;
-    }
-    formatString.dataType =
-    stringInBytes = dataSize * formatString.countersInString * 2;
-}
-*/
-
-void insertDataToDB(const char *statem) {
-    try {
-        connection C("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
-        if (C.is_open()) {
-            cout << "Opened database successfully: " << C.dbname() << endl;
-        } else {
-            cout << "Can't open database" << endl;
-            return;
-        }
-
-        /* Create a transactional object. */
-        work W(C);
-
-        /* Execute SQL query */
-        W.exec(statem);
-        W.commit();
-        cout << "Records created successfully" << endl << endl;
-    } catch (const std::exception &e) {
-        cerr << e.what() << std::endl;
-        return;
-    }
-}
 
 int main(int argc, char* argv[]) {
     command_line cmd(argc, argv);
     std::string file_name = cmd.run();
 
     dataFile f(file_name);
-    f.readDataFromFile();
-    //insert_into_flights(f.davot());
+    f.readHeaderFromFile();
+    f.readStringsFromFile();
 
+    database base("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
+    base.execute(f.createQuery());
     cout << "OK " << endl;
     return 0;
 }
 #pragma pack(pop)
-
-// в мейне создавать экземпляры классов и вызов интерфейсных функций
-// чтение мейна - разбор командной строки
-//1824 хедер общий
-// 784-800 весь заголовок
-// 1024??
-// 1024 - 64 заголовок строки
-// заголовок ргг 800
-// короче разберемся

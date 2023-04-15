@@ -1,10 +1,6 @@
-//
-// Created by danila on 21.02.23.
-//
-
 #ifndef DATASAVER_STRUCTS_H
 #define DATASAVER_STRUCTS_H
-
+#pragma pack(push, 1)
 struct heading {
     unsigned int sig1, sig2, sig3, sig4; //сигнатуры
     unsigned char code; // код заголовка
@@ -77,6 +73,7 @@ struct format_string { //Структура подзаголовка форма�
 };
 
 class stringStructs {
+public:
     // структуры строки
     struct navigation { //Структура подзаголовка параметров навигации
         unsigned char headerVersion;
@@ -119,12 +116,23 @@ class stringStructs {
     struct control_ACP { //Структура контрольных параметров АЦП
         unsigned char reserve[32];
     };
+    navigation navgt{};
+    control_receiver receiver{};
+    control_transmitter transmitter{};
+    control_synchronizer synchronizer{};
+    control_generator generator{};
+    control_JSO jso{};
+    control_antenna_system antennaSystem{};
+    control_ACP acp{};
 
-    struct synthesis {
-        unsigned char reserve1 [18];
-        float Step_Range;
-        float Step_Azimuth;
-        unsigned char reserve [486];
-    };
 };
+
+struct synthesis {
+    unsigned char reserve1 [18];
+    float Step_Range;
+    float Step_Azimuth;
+    unsigned char reserve [486];
+};
+
+#pragma pack(pop)
 #endif //DATASAVER_STRUCTS_H
