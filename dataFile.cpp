@@ -176,7 +176,7 @@ string dataFile::createQueryIntoSeriesOfHolograms() {
     boost::format fmt("INSERT INTO series_of_holograms (NumLocator, Type_Rgg, Type_Work, NumStrAzimuth,"
                       " NumStrRange, Step_Azimuth, Step_Range, Series_Rgg, PolarBut, PolarReception,"
                       " BandWidth, DiskLabel, Path_Rgg) "
-                      "VALUES (%1%, %2%, %3%, %8%, 123456, %4%, 2.3, NULL, '%5%', '%6%', 456,"
+                      "VALUES (%1%, %2%, %3%, %8%, NULL, %4%, NULL, NULL, '%5%', '%6%', NULL,"
                       " NULL, '%7%');");
     fmt % type % Type_Rgg % int(synch.overview_mode) % synch.Step_Azimuth % synch.polarization % recev.polarization
     % filePath % NumStrAzimuth;
@@ -187,8 +187,8 @@ string dataFile::createQueryIntoSeriesOfHolograms() {
 }
 
 string dataFile::createQueryIntoHologram() {
-    boost::format fmt("INSERT INTO hologram (FileName, Num_file) VALUES ('%s', 12345);");
-    fmt % file_name;
+    boost::format fmt("INSERT INTO hologram (FileName, Num_file) VALUES ('%s', 1);");
+    fmt % file_name; //Num_file
     string sqlStatement = fmt.str();
     cout << sqlStatement << endl << endl;
     return sqlStatement;
@@ -203,7 +203,7 @@ string dataFile::createQueryIntoRli() {
     boost::format fmt("INSERT INTO rli (NumLocator, Step_Azimuth, Step_Range,"
                       " PolarBut, PolarReception, BandWidth, Form_RLI, FileName, Rli_Type,"
                       " AzimuthSize, RangeSize, Commentary)"
-                      "VALUES (%1%, %2%, 2.3, '%3%', '%4%', 456, 0, '%5%', %6%, 1234567, 1234567, NULL);");
+                      "VALUES (%1%, %2%, NULL, '%3%', '%4%', 456, 0, '%5%', %6%, 1234567, 1234567, NULL);");
     fmt % locatorOperation.range_number % synch.Step_Azimuth % synch.polarization
     % recev.polarization % filePath % synch.overview_mode;
 

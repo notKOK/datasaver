@@ -9,14 +9,19 @@ int main(int argc, char* argv[]) {
     command_line cmd(argc, argv);
     string file_name = cmd.run();
 
-    dataFile f(file_name);
-    f.readHeaderFromFile();
-    f.readStringsFromFile();
-    //f.testStructs();
-    f.createQuery();
+    if(cmd.f_srch) {
+        dataFile f(file_name);
+        f.readHeaderFromFile();
+        f.readStringsFromFile();
+        //f.testStructs();
+        database base("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
+        base.execute(f.createQuery());
+    }
+    else {
+        database base("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
+        base.search(file_name);
+    }
 
-    //database base("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
-    //base.execute(f.createQuery());
     cout << "OK " << endl;
     return 0;
 }

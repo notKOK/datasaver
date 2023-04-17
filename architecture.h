@@ -15,11 +15,13 @@ class command_line
 public:
     command_line(int argc, char* argv[]);
     string run();
+    bool f_srch;
 
 private:
     po::options_description desc_;
     string filename_;
     string directory_;
+    string search_param;
 };
 
 class dataFile {
@@ -64,6 +66,7 @@ public:
     database(const string& connString);
     ~database();
     void execute(const vector<string>& sqlStatements);
+    void search(const string& date);
 private:
     pqxx::connection conn;
 };
