@@ -6,7 +6,6 @@
 #include <boost/format.hpp>
 
 
-
 dataFile::dataFile(const std::string& file_name) {
     datFile.open(file_name, std::ios::binary);
     this->file_name = file_name;
@@ -67,8 +66,12 @@ void dataFile::readStringsFromFile() {
             dataSize = sizeof(double);
             break;
     }
-    //formatString.dataType = if == 0: 2 if == 1: 1
-    stringInBytes = dataSize * formatString.countersInString * 2;
+    short int datatype;
+    if (int(formatString.dataType) == 0) datatype = 2;
+    else {
+        datatype = 1;
+    }
+    stringInBytes = dataSize * formatString.countersInString * datatype;
     readOneString(&firstString);
     while(true){
         datFile.seekg(stringInBytes, std::ifstream::cur);

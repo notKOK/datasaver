@@ -13,9 +13,10 @@ int main(int argc, char* argv[]) {
     f.readHeaderFromFile();
     f.readStringsFromFile();
     //f.testStructs();
+    f.createQuery();
 
-    database base("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
-    base.execute(f.createQuery());
+    //database base("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
+    //base.execute(f.createQuery());
     cout << "OK " << endl;
     return 0;
 }
