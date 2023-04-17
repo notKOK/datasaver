@@ -70,7 +70,9 @@ struct format_string { //Структура подзаголовка форма�
     unsigned char orderData;
     unsigned int countersInString;
     unsigned char reserve[57]; //reserve 64
+    //весь заголовок 800 байт
 };
+
 
 class stringStructs {
 public:
@@ -126,6 +128,7 @@ public:
     control_JSO jso{};
     control_antenna_system antennaSystem{};
     control_ACP acp{};
+    // 1024 весь заголовок строки
 
 };
 

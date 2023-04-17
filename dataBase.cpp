@@ -2,16 +2,17 @@
 #include <pqxx/pqxx>
 #include <iostream>
 
+using namespace std;
 
-database::database(const std::string &connString) :conn(connString) {
+database::database(const string &connString) :conn(connString) {
 }
 
-void database::execute(const std::vector<std::string>& sqlStatements) {
+void database::execute(const vector<string>& sqlStatements) {
     try {
         if (conn.is_open()) {
-            std::cout << "Opened database successfully: " << conn.dbname() << std::endl;
+            cout << "Opened database successfully: " << conn.dbname() << endl;
         } else {
-            std::cout << "Can't open database" << std::endl;
+            cout << "Can't open database" << endl;
             return;
         }
         pqxx::work txn(conn);
@@ -21,10 +22,10 @@ void database::execute(const std::vector<std::string>& sqlStatements) {
         }
 
         txn.commit();
-        std::cout << "Transaction completed successfully" << std::endl;
+        cout << "Transaction completed successfully" << endl;
 
-    } catch (const std::exception& e) {
-        std::cerr << "Transaction failed: " << e.what() << std::endl;
+    } catch (const exception& e) {
+        cerr << "Transaction failed: " << e.what() << endl;
     }
 }
 

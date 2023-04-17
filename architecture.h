@@ -14,38 +14,39 @@ class command_line
 {
 public:
     command_line(int argc, char* argv[]);
-    std::string run();
+    string run();
 
 private:
     po::options_description desc_;
-    std::string filename_;
-    std::string directory_;
+    string filename_;
+    string directory_;
 };
 
 class dataFile {
 public:
-    explicit dataFile(const std::string& file_name);
+    explicit dataFile(const string& file_name);
     ~dataFile();
     void readHeaderFromFile();
     void readStringsFromFile();
-    std::vector<std::string> createQuery();
+    vector<string> createQuery();
     void testStructs();
 
 private:
-    std::ifstream datFile;
-    std::string file_name;
+    ifstream datFile;
+    string file_name;
 
     stringStructs firstString;
     stringStructs lastString;
+    unsigned int stringInBytes;
 
     void readOneString(stringStructs *oneString);
-    std::string createQueryIntoFlights();
-    std::string createQueryIntoContext();
-    std::string createQueryIntoSensor();
-    std::string createQueryIntoViewArea();
-    std::string createQueryIntoSeriesOfHolograms();
-    std::string createQueryIntoHologram();
-    std::string createQueryIntoRli();
+    string createQueryIntoFlights();
+    string createQueryIntoContext();
+    string createQueryIntoSensor();
+    string createQueryIntoViewArea();
+    string createQueryIntoSeriesOfHolograms();
+    string createQueryIntoHologram();
+    string createQueryIntoRli();
     subheading subheader{};
     locator_operation locatorOperation{};
     receiver recev{};
@@ -60,9 +61,9 @@ private:
 
 class database{
 public:
-    database(const std::string& connString);
+    database(const string& connString);
     ~database();
-    void execute(const std::vector<std::string>& sqlStatements);
+    void execute(const vector<string>& sqlStatements);
 private:
     pqxx::connection conn;
 };

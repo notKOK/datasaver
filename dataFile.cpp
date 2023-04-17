@@ -6,8 +6,8 @@
 #include <boost/format.hpp>
 
 
-dataFile::dataFile(const std::string& file_name) {
-    datFile.open(file_name, std::ios::binary);
+dataFile::dataFile(const string &file_name) {
+    datFile.open(file_name, ios::binary);
     this->file_name = file_name;
     if (datFile.is_open()) {
         unsigned int test;
@@ -19,14 +19,13 @@ dataFile::dataFile(const std::string& file_name) {
         if (test != 0x01F001F8) perror("isn't a РЛС, РЛИ или строковой файл");
         datFile.read(reinterpret_cast<char *>(&test), sizeof(test));
         if (test != 0x56AA55AA) perror("isn't a РЛС, РЛИ или строковой файл");
-    }
-    else{
+    } else {
         perror("cant open file");
     }
 }
 
 void dataFile::readHeaderFromFile() {
-    datFile.seekg(32, std::ifstream::beg); // skip signatures
+    datFile.seekg(32, ifstream::beg); // skip signatures
     datFile.read(reinterpret_cast<char *>(&subheader), sizeof(subheading));
     datFile.read(reinterpret_cast<char *>(&locatorOperation), sizeof(locator_operation));
     datFile.read(reinterpret_cast<char *>(&recev), sizeof(receiver));
@@ -44,9 +43,8 @@ dataFile::~dataFile() {
 }
 
 void dataFile::readStringsFromFile() {
-    unsigned int stringInBytes;
     int dataSize = int(formatString.counterType);
-    switch(dataSize) {
+    switch (dataSize) {
         case 0:
             dataSize = sizeof(char);
             break;
@@ -73,16 +71,16 @@ void dataFile::readStringsFromFile() {
     }
     stringInBytes = dataSize * formatString.countersInString * datatype;
     readOneString(&firstString);
-    while(true){
-        datFile.seekg(stringInBytes, std::ifstream::cur);
-        if(datFile.tellg() == -1) break;
+    while (true) {
+        datFile.seekg(stringInBytes, ifstream::cur);
+        if (datFile.tellg() == -1) break;
         readOneString(&lastString);
-        //std::cout << lastString.navgt.stringNumber << std::endl;
+        //cout << lastString.navgt.stringNumber << endl;
     }
 }
 
 void dataFile::readOneString(stringStructs *oneString) {
-    datFile.seekg(32, std::ifstream::cur); // skip signature string
+    datFile.seekg(32, ifstream::cur); // skip signature string
     datFile.read(reinterpret_cast<char *>(&oneString->navgt), sizeof(oneString->navgt));
     datFile.read(reinterpret_cast<char *>(&oneString->receiver), sizeof(oneString->receiver));
     datFile.read(reinterpret_cast<char *>(&oneString->transmitter), sizeof(oneString->transmitter));
@@ -93,8 +91,8 @@ void dataFile::readOneString(stringStructs *oneString) {
     datFile.read(reinterpret_cast<char *>(&oneString->acp), sizeof(oneString->acp));
 }
 
-std::vector<std::string> dataFile::createQuery(){
-    std::vector<std::string> sqlStatements;
+vector<string> dataFile::createQuery() {
+    vector<string> sqlStatements;
     sqlStatements.push_back(createQueryIntoFlights());
     sqlStatements.push_back(createQueryIntoContext());
     sqlStatements.push_back(createQueryIntoSensor());
@@ -104,19 +102,18 @@ std::vector<std::string> dataFile::createQuery(){
     return sqlStatements;
 }
 
-
-std::string dataFile::createQueryIntoFlights() {
+string dataFile::createQueryIntoFlights() {
     int64_t time_ = subheader.APM_time / 1000; //convert to seconds
 
     tm tm = *localtime(&(time_));
     boost::format fmt("INSERT INTO flights (NumFly, DateTime) VALUES (%d, '%d-%02d-%02d')");
     fmt % 0 % (tm.tm_year + 1900) % (tm.tm_mon + 1) % tm.tm_mday; //Set parameters
-    std::string sqlStatement = fmt.str();
-    std::cout << sqlStatement << std::endl << std::endl;
+    string sqlStatement = fmt.str();
+    cout << sqlStatement << endl << endl;
     return sqlStatement;
 }
 
-std::string dataFile::createQueryIntoContext(){
+string dataFile::createQueryIntoContext() {
     int64_t time_ = subheader.APM_time / 1000; //convert to seconds
     struct tm tm = *localtime(&(time_));
     time_ = firstString.navgt.APMtime / 1000;
@@ -124,64 +121,81 @@ std::string dataFile::createQueryIntoContext(){
     time_ = lastString.navgt.APMtime / 1000;
     struct tm tm2 = *localtime(&(time_));
 
-    boost::format sqlStatement("INSERT INTO context (ContextName, ContextBeginDate, ContextEndDate, Latitude, Longitude, Latitude1, Longitude1, Commentary) VALUES ('%1%-%2%-%3%', '%4%-%5%-%6%', '%7%-%8%-%9%', %10%, %11%, %12%, %13%, NULL);");
-    sqlStatement % (tm.tm_year + 1900) % (tm.tm_mon + 1) % (tm.tm_mday) % (tm1.tm_year) % (tm1.tm_mon) % (tm1.tm_mday)
-                 % (tm2.tm_year) % (tm2.tm_mon) % (tm2.tm_mday) % (firstString.navgt.latitude) % (firstString.navgt.longitude)
-                 % (lastString.navgt.latitude) % (lastString.navgt.longitude);
-    std::cout << sqlStatement.str() << std::endl << std::endl;
+    boost::format sqlStatement(
+            "INSERT INTO context (ContextName, ContextBeginDate, ContextEndDate, Latitude, Longitude, Latitude1, Longitude1, Commentary) VALUES ('%1%-%2%-%3%', '%4%-%5%-%6% %7%:%8%:%9%', '%10%-%11%-%12% %13%:%14%:%15%', %16%, %17%, %18%, %19%, NULL);");
+    sqlStatement % (tm.tm_year + 1900) % (tm.tm_mon + 1) % (tm.tm_mday)
+    % (tm1.tm_year + 1900) % (tm1.tm_mon + 1) % (tm1.tm_mday) % (tm1.tm_hour) % (tm1.tm_min) % (tm1.tm_sec)
+    % (tm2.tm_year + 1900) % (tm2.tm_mon + 1) % (tm2.tm_mday) % (tm2.tm_hour) % (tm2.tm_min) % (tm2.tm_sec)
+    % (firstString.navgt.latitude) % (firstString.navgt.longitude)
+    % (lastString.navgt.latitude) % (lastString.navgt.longitude);
+    cout << sqlStatement.str() << endl << endl;
     return sqlStatement.str();
 }
 
-std::string dataFile::createQueryIntoSensor() {
+string dataFile::createQueryIntoSensor() {
     boost::format sqlStatement("INSERT INTO sensor (sensortype) VALUES ('РЛС-А%d00');");
     int type = static_cast<int>(locatorOperation.range_number);
     sqlStatement % type;
-    std::cout << sqlStatement.str() << std::endl << std::endl;
+    cout << sqlStatement.str() << endl << endl;
     return sqlStatement.str();
 }
 
-std::string dataFile::createQueryIntoViewArea() {
+string dataFile::createQueryIntoViewArea() {
+    int64_t time_ = firstString.navgt.APMtime / 1000;
+    struct tm tm1 = *localtime(&(time_));
+    time_ = lastString.navgt.APMtime / 1000;
+    struct tm tm2 = *localtime(&(time_));
+
     boost::format sqlStatement("INSERT INTO view_zone (Latitude, Longitude, Latitude1, Longitude1, StartTime, EndTime, RangeToTheZone, Side, SourceDataZone) \
-    VALUES (%f, %f, %f, %f, '%s', '%s', %f, %d, %d);");
+    VALUES (%f, %f, %f, %f, '%04d-%02d-%02d %02d:%02d:%02d', '%04d-%02d-%02d %02d:%02d:%02d', %f, %d, %d);");
     int SourceDataZone = 0;
-    sqlStatement % 40.7128 % -74.0060 % 40.7128 % -74.0060 % "2022-01-01 00:00:00" % "2022-01-01 01:00:00" % synch.initial_range % int(synch.side) % SourceDataZone;
-    std::cout << sqlStatement.str() << std::endl << std::endl;
+    sqlStatement % (firstString.navgt.latitude) % (firstString.navgt.longitude)
+    % (lastString.navgt.latitude) % (lastString.navgt.longitude)
+    % (tm1.tm_year + 1900) % (tm1.tm_mon + 1) % (tm1.tm_mday) % (tm1.tm_hour) % (tm1.tm_min) % (tm1.tm_sec)
+    % (tm2.tm_year + 1900) % (tm2.tm_mon + 1) % (tm2.tm_mday) % (tm2.tm_hour) % (tm2.tm_min) % (tm2.tm_sec)
+    % synch.initial_range % int(synch.side) % SourceDataZone;
+    cout << sqlStatement.str() << endl << endl;
     return sqlStatement.str();
 }
 
-
-std::string dataFile::createQueryIntoSeriesOfHolograms() {
+string dataFile::createQueryIntoSeriesOfHolograms() {
     int Type_Rgg = 2; //always 2
     int type = static_cast<int>(locatorOperation.range_number);
-    std::filesystem::path filepath(file_name);
-    std::string filePath = std::filesystem::absolute(filepath);
+    filesystem::path filepath(file_name);
+    string filePath = filesystem::absolute(filepath);
     synch.polarization = (synch.polarization == '0') ? 'V' : (synch.polarization == '1') ? 'H' :
                                                              (synch.polarization == '2') ? '2' : '4';
     recev.polarization = (recev.polarization == '0') ? 'V' : 'H';
 
+    uintmax_t NumStrAzimuth;
+    uintmax_t fileSize = filesystem::file_size(filePath);
+    fileSize = fileSize - 800;
+    NumStrAzimuth = fileSize / (stringInBytes + 1024);
+
+    cout << "File size: " << fileSize << " bytes\n";
     boost::format fmt("INSERT INTO series_of_holograms (NumLocator, Type_Rgg, Type_Work, NumStrAzimuth,"
                       " NumStrRange, Step_Azimuth, Step_Range, Series_Rgg, PolarBut, PolarReception,"
                       " BandWidth, DiskLabel, Path_Rgg) "
-                      "VALUES (%1%, %2%, %3%, 12345678, 123456, %4%, 2.3, NULL, '%5%', '%6%', 456,"
+                      "VALUES (%1%, %2%, %3%, %8%, 123456, %4%, 2.3, NULL, '%5%', '%6%', 456,"
                       " NULL, '%7%');");
     fmt % type % Type_Rgg % int(synch.overview_mode) % synch.Step_Azimuth % synch.polarization % recev.polarization
-    % filePath;
+    % filePath % NumStrAzimuth;
 
-    std::string sqlStatement = fmt.str();
-    std::cout << sqlStatement << std::endl << std::endl;
+    string sqlStatement = fmt.str();
+    cout << sqlStatement << endl << endl;
     return sqlStatement;
 }
 
-std::string dataFile::createQueryIntoHologram() {
+string dataFile::createQueryIntoHologram() {
     boost::format fmt("INSERT INTO hologram (FileName, Num_file) VALUES ('%s', 12345);");
     fmt % file_name;
-    std::string sqlStatement = fmt.str();
-    std::cout << sqlStatement << std::endl << std::endl;
+    string sqlStatement = fmt.str();
+    cout << sqlStatement << endl << endl;
     return sqlStatement;
 }
 
-std::string dataFile::createQueryIntoRli() {
-    std::string filePath = std::filesystem::absolute(std::filesystem::path(file_name)).string();
+string dataFile::createQueryIntoRli() {
+    string filePath = filesystem::absolute(filesystem::path(file_name)).string();
     synch.polarization = (synch.polarization == '0') ? 'V' : (synch.polarization == '1') ? 'H' :
                                                              (synch.polarization == '2') ? '2' : '4';
     recev.polarization = (recev.polarization == '0') ? 'V' : 'H';
@@ -193,7 +207,7 @@ std::string dataFile::createQueryIntoRli() {
     fmt % locatorOperation.range_number % synch.Step_Azimuth % synch.polarization
     % recev.polarization % filePath % synch.overview_mode;
 
-    std::string sqlStatement = fmt.str();
+    string sqlStatement = fmt.str();
     return sqlStatement;
 }
 

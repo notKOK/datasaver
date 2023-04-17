@@ -7,7 +7,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     command_line cmd(argc, argv);
-    std::string file_name = cmd.run();
+    string file_name = cmd.run();
 
     dataFile f(file_name);
     f.readHeaderFromFile();
