@@ -6,21 +6,34 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    command_line cmd(argc, argv);
+    Command_line cmd(argc, argv);
     string file_name = cmd.run();
+    cout << file_name << endl;
+    file_name = "os.k";
 
-    if(cmd.f_srch) {
-        dataFile f(file_name);
+
+
+    DataFile f(file_name);
+    //все публичные метода должны отрабатывать без безы данных
+    //f.readHeaderFromFile();
+    //f.readStringsFromFile();
+    //f.createQuery();
+
+
+
+
+/*    if(cmd.f_srch) {
+        DataFile f(file_name);
         f.readHeaderFromFile();
+        f.testStructs();
         f.readStringsFromFile();
-        //f.testStructs();
-        database base("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
+        Database base("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
         base.execute(f.createQuery());
     }
     else {
-        database base("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
+        Database base("dbname = datasaver user = keeper password = '' hostaddr = 127.0.0.1 port = 5432");
         base.search(file_name);
-    }
+    }*/
 
     cout << "OK " << endl;
     return 0;

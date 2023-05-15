@@ -4,15 +4,15 @@
 
 using namespace std;
 
-database::database(const string &connString) :conn(connString) {
+Database::Database(const string &connString) : conn(connString) {
 }
 
-void database::execute(const vector<string>& sqlStatements) {
+void Database::execute(const vector<string>& sqlStatements) {
     try {
         if (conn.is_open()) {
-            cout << "Opened database successfully: " << conn.dbname() << endl;
+            cout << "Opened Database successfully: " << conn.dbname() << endl;
         } else {
-            cout << "Can't open database" << endl;
+            cout << "Can't open Database" << endl;
             return;
         }
         pqxx::work txn(conn);
@@ -29,11 +29,11 @@ void database::execute(const vector<string>& sqlStatements) {
     }
 }
 
-database::~database() {
+Database::~Database() {
     conn.close();
 }
 
-void database::search(const string& date) {
+void Database::search(const string& date) {
 
     std::string query = "SELECT series_of_holograms.Path_Rgg\n"
                         "FROM series_of_holograms\n"

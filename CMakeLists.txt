@@ -11,7 +11,7 @@ find_package(Boost COMPONENTS program_options REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
-set(SOURCES main.cpp structs.h architecture.h command_line.cpp command_line.cpp dataFile.cpp dataBase.cpp)
+set(SOURCES main.cpp structs.h architecture.h Command_line.cpp Command_line.cpp DataFile.cpp DataBase.cpp)
 
 set(CMAKE_CXX_STANDARD 23)
 

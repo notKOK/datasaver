@@ -8,6 +8,11 @@ struct heading {
     unsigned char reserve[14]; // 32 bytes
 };
 
+union headingBuf {
+    heading _heading;
+    char bytes[sizeof(heading)]; // массив байтов
+};
+
 struct subheading {
     unsigned char ver_heading; // Версия заголовка
     int64_t APM_time;  //Время АРМ
@@ -19,6 +24,11 @@ struct subheading {
     char country_flight[16]; // страна полета
     char flight_territory[16]; // Территория полета
     unsigned char reserve[63]; // 128 bytes
+};
+
+union subheadingBuf {
+    subheading _subheading;
+    char bytes[sizeof(subheading)]; // массив байтов
 };
 
 struct locator_operation { //Структура подзаголовка режима работы локатора

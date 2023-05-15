@@ -10,12 +10,13 @@
 namespace po = boost::program_options;
 using namespace std;
 
-class command_line
+class Command_line
 {
 public:
-    command_line(int argc, char* argv[]);
+    Command_line(int argc, char* argv[]);
     string run();
     bool f_srch;
+    ~Command_line();
 
 private:
     po::options_description desc_;
@@ -24,10 +25,10 @@ private:
     string search_param;
 };
 
-class dataFile {
+class DataFile {
 public:
-    explicit dataFile(const string& file_name);
-    ~dataFile();
+    explicit DataFile(const string& file_name);
+    ~DataFile();
     void readHeaderFromFile();
     void readStringsFromFile();
     vector<string> createQuery();
@@ -39,7 +40,7 @@ private:
 
     stringStructs firstString;
     stringStructs lastString;
-    unsigned int stringInBytes;
+    unsigned int stringInBytes = 0;
 
     void readOneString(stringStructs *oneString);
     string createQueryIntoFlights();
@@ -49,7 +50,9 @@ private:
     string createQueryIntoSeriesOfHolograms();
     string createQueryIntoHologram();
     string createQueryIntoRli();
-    subheading subheader{};
+    headingBuf headingBufer{};
+    subheadingBuf subheader{};
+    //subheading subheader{};
     locator_operation locatorOperation{};
     receiver recev{};
     transmitter transmt{};
@@ -61,10 +64,10 @@ private:
     format_string formatString{};
 };
 
-class database{
+class Database{
 public:
-    database(const string& connString);
-    ~database();
+    Database(const string& connString);
+    ~Database();
     void execute(const vector<string>& sqlStatements);
     void search(const string& date);
 private:

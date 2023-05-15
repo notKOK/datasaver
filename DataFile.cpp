@@ -6,27 +6,23 @@
 #include <boost/format.hpp>
 
 
-dataFile::dataFile(const string &file_name) {
+DataFile::DataFile(const string &file_name) {
     datFile.open(file_name, ios::binary);
     this->file_name = file_name;
     if (datFile.is_open()) {
-        unsigned int test;
-        datFile.read(reinterpret_cast<char *>(&test), sizeof(test));
-        if (test != 0x00FF00FF) perror("isn't a РЛС, РЛИ или строковой файл");
-        datFile.read(reinterpret_cast<char *>(&test), sizeof(test));
-        if (test != 0x01FC01FE) perror("isn't a РЛС, РЛИ или строковой файл");
-        datFile.read(reinterpret_cast<char *>(&test), sizeof(test));
-        if (test != 0x01F001F8) perror("isn't a РЛС, РЛИ или строковой файл");
-        datFile.read(reinterpret_cast<char *>(&test), sizeof(test));
-        if (test != 0x56AA55AA) perror("isn't a РЛС, РЛИ или строковой файл");
+        datFile.read(headingBufer.bytes, sizeof(headingBufer)); //sizeof(headingBufer)
+        if (headingBufer._heading.sig1 != 0x00FF00FF) perror("isn't a РЛС, РЛИ или строковой файл");
+        if (headingBufer._heading.sig2 != 0x01FC01FE) perror("isn't a РЛС, РЛИ или строковой файл");
+        if (headingBufer._heading.sig3 != 0x01F001F8) perror("isn't a РЛС, РЛИ или строковой файл");
+        if (headingBufer._heading.sig4 != 0x56AA55AA) perror("isn't a РЛС, РЛИ или строковой файл");
     } else {
         perror("cant open file");
     }
 }
 
-void dataFile::readHeaderFromFile() {
+void DataFile::readHeaderFromFile() {
     datFile.seekg(32, ifstream::beg); // skip signatures
-    datFile.read(reinterpret_cast<char *>(&subheader), sizeof(subheading));
+    datFile.read(subheader.bytes, sizeof(subheading));
     datFile.read(reinterpret_cast<char *>(&locatorOperation), sizeof(locator_operation));
     datFile.read(reinterpret_cast<char *>(&recev), sizeof(receiver));
     datFile.read(reinterpret_cast<char *>(&transmt), sizeof(transmitter));
@@ -38,11 +34,11 @@ void dataFile::readHeaderFromFile() {
     datFile.read(reinterpret_cast<char *>(&formatString), sizeof(format_string));
 }
 
-dataFile::~dataFile() {
+DataFile::~DataFile() {
     datFile.close();
 }
 
-void dataFile::readStringsFromFile() {
+void DataFile::readStringsFromFile() {
     int dataSize = int(formatString.counterType);
     switch (dataSize) {
         case 0:
@@ -79,7 +75,7 @@ void dataFile::readStringsFromFile() {
     }
 }
 
-void dataFile::readOneString(stringStructs *oneString) {
+void DataFile::readOneString(stringStructs *oneString) {
     datFile.seekg(32, ifstream::cur); // skip signature string
     datFile.read(reinterpret_cast<char *>(&oneString->navgt), sizeof(oneString->navgt));
     datFile.read(reinterpret_cast<char *>(&oneString->receiver), sizeof(oneString->receiver));
@@ -91,7 +87,7 @@ void dataFile::readOneString(stringStructs *oneString) {
     datFile.read(reinterpret_cast<char *>(&oneString->acp), sizeof(oneString->acp));
 }
 
-vector<string> dataFile::createQuery() {
+vector<string> DataFile::createQuery() {
     vector<string> sqlStatements;
     sqlStatements.push_back(createQueryIntoFlights());
     sqlStatements.push_back(createQueryIntoContext());
@@ -102,8 +98,8 @@ vector<string> dataFile::createQuery() {
     return sqlStatements;
 }
 
-string dataFile::createQueryIntoFlights() {
-    int64_t time_ = subheader.APM_time / 1000; //convert to seconds
+string DataFile::createQueryIntoFlights() {
+    int64_t time_ = subheader._subheading.APM_time / 1000; //convert to seconds
 
     tm tm = *localtime(&(time_));
     boost::format fmt("INSERT INTO flights (NumFly, DateTime) VALUES (%d, '%d-%02d-%02d')");
@@ -113,8 +109,8 @@ string dataFile::createQueryIntoFlights() {
     return sqlStatement;
 }
 
-string dataFile::createQueryIntoContext() {
-    int64_t time_ = subheader.APM_time / 1000; //convert to seconds
+string DataFile::createQueryIntoContext() {
+    int64_t time_ = subheader._subheading.APM_time / 1000; //convert to seconds
     struct tm tm = *localtime(&(time_));
     time_ = firstString.navgt.APMtime / 1000;
     struct tm tm1 = *localtime(&(time_));
@@ -132,7 +128,7 @@ string dataFile::createQueryIntoContext() {
     return sqlStatement.str();
 }
 
-string dataFile::createQueryIntoSensor() {
+string DataFile::createQueryIntoSensor() {
     boost::format sqlStatement("INSERT INTO sensor (sensortype) VALUES ('РЛС-А%d00');");
     int type = static_cast<int>(locatorOperation.range_number);
     sqlStatement % type;
@@ -140,7 +136,7 @@ string dataFile::createQueryIntoSensor() {
     return sqlStatement.str();
 }
 
-string dataFile::createQueryIntoViewArea() {
+string DataFile::createQueryIntoViewArea() {
     int64_t time_ = firstString.navgt.APMtime / 1000;
     struct tm tm1 = *localtime(&(time_));
     time_ = lastString.navgt.APMtime / 1000;
@@ -158,7 +154,7 @@ string dataFile::createQueryIntoViewArea() {
     return sqlStatement.str();
 }
 
-string dataFile::createQueryIntoSeriesOfHolograms() {
+string DataFile::createQueryIntoSeriesOfHolograms() {
     int Type_Rgg = 2; //always 2
     int type = static_cast<int>(locatorOperation.range_number);
     filesystem::path filepath(file_name);
@@ -186,7 +182,7 @@ string dataFile::createQueryIntoSeriesOfHolograms() {
     return sqlStatement;
 }
 
-string dataFile::createQueryIntoHologram() {
+string DataFile::createQueryIntoHologram() {
     boost::format fmt("INSERT INTO hologram (FileName, Num_file) VALUES ('%s', 1);");
     fmt % file_name; //Num_file
     string sqlStatement = fmt.str();
@@ -194,7 +190,7 @@ string dataFile::createQueryIntoHologram() {
     return sqlStatement;
 }
 
-string dataFile::createQueryIntoRli() {
+string DataFile::createQueryIntoRli() {
     string filePath = filesystem::absolute(filesystem::path(file_name)).string();
     synch.polarization = (synch.polarization == '0') ? 'V' : (synch.polarization == '1') ? 'H' :
                                                              (synch.polarization == '2') ? '2' : '4';
@@ -211,7 +207,7 @@ string dataFile::createQueryIntoRli() {
     return sqlStatement;
 }
 
-void dataFile::testStructs() {
+void DataFile::testStructs() {
     cout << sizeof(firstString.navgt) << endl;
     cout << sizeof(firstString.receiver) << endl;
     cout << sizeof(firstString.transmitter) << endl;
