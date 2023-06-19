@@ -42,13 +42,11 @@ string Command_line::run()
     }
 
     if (!directory_.empty()) {
-        cout << "Directory path: " << directory_ << endl;
         return directory_;
     }
 
     if (!search_param.empty()) {
         f_srch = false;
-        cout << "Search: " << search_param << endl;
         return search_param;
     }
     cout << "Search: " << search_param << endl;
